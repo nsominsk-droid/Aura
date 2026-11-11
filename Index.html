@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AURA RADIO // Global Online Player</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-dark: #070a12;
+            --glass-bg: rgba(15, 23, 42, 0.88);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-card: rgba(30, 41, 59, 0.55);
+            --glass-card-hover: rgba(30, 41, 59, 0.95);
+            --brand-primary: #6366f1;
+            --brand-glow: rgba(99, 102, 241, 0.4);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --accent-pink: #ec4899;
+            --accent-purple: #a855f7;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.22;
+        }
+        .blob-1 { width: 350px; height: 350px; background: var(--brand-primary); top: -80px; left: -80px; }
+        .blob-2 { width: 400px; height: 400px; background: var(--accent-purple); bottom: -100px; right: -100px; }
+
+        .app-shell {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem;
+            gap: 0.5rem;
+            max-width: 1440px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.85rem;
+        }
+        .glass-card {
+            background: var(--glass-card);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 0.6rem;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .glass-card:hover {
+            background: var(--glass-card-hover);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        header {
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 50;
+            width: 100%;
+        }
+        @media (max-width: 480px) {
+            header {
+                padding: 0.4rem 0.5rem;
+                gap: 0.3rem;
+            }
+            .brand-title h1 {
+                font-size: 0.88rem;
+            }
+            .brand-badge {
+                display: none;
+            }
+            .status-badge {
+                max-width: 80px;
+                font-size: 0.55rem;
+            }
+            .btn-action {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.65rem;
+                height: 30px;
+                min-height: 30px;
+            }
+        }
+
+        .brand-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, var(--brand-primary), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px var(--brand-glow);
+        }
+        .brand-title h1 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .brand-badge {
+            font-size: 0.55rem;
+            font-family: monospace;
+            padding: 1px 5px;
+            border-radius: 4px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.6rem;
+            font-family: monospace;
+            color: var(--text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        @media (max-width: 480px) {
+            .status-badge {
+                max-width: 90px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+        .ping-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+        .btn-action {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            font-size: 0.7rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            min-height: 32px;
+            height: 32px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+        .btn-action:hover {
+            background: rgba(51, 65, 85, 0.9);
+        }
+
+        .main-layout {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow: hidden;
+        }
+
+        @media (min-width: 900px) {
+            .main-layout {
+                display: grid;
+                grid-template-columns: 380px 1fr;
+            }
+        }
+
+        .player-card {
+            display: flex;
+            flex-direction: column;
+            padding: 0.8rem;
+            gap: 0.6rem;
+            position: relative;
+            min-height: 0;
+            overflow: hidden;
+            flex-shrink: 0;
+            justify-content: space-between;
+        }
+
+        .cover-frame-wrapper {
+            width: 100%;
+            max-width: 210px;
+            margin: 0.4rem auto;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .cover-frame {
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            position: relative;
+            border-radius: 0.85rem;
+            overflow: hidden;
+            background: #030712;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+        }
+        .cover-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+        .cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .cover-img.loaded {
+            opacity: 1;
+        }
+
+        .btn-heart-bookmark {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 50;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.8);
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            transition: transform 0.15s, background 0.15s, color 0.15s;
+        }
+        .btn-heart-bookmark:hover {
+            transform: scale(1.08);
+        }
+        .btn-heart-bookmark.is-favorite {
+            background: rgba(236, 72, 153, 0.95);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(236, 72, 153, 0.6);
+        }
+        .btn-heart-bookmark.not-favorite {
+            background: rgba(7, 10, 18, 0.75);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .btn-heart-bookmark.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .station-meta {
+            width: 100%;
+            text-align: center;
+            padding: 0 0.25rem;
+            flex-shrink: 0;
+        }
+        .station-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            width: 100%;
+        }
+        .station-title {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .btn-info-icon {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-muted);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .btn-info-icon:hover {
+            background: var(--brand-primary);
+            color: #fff;
+            border-color: var(--brand-primary);
+        }
+        .btn-info-icon.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .track-sub-title {
+            font-size: 0.7rem;
+            font-family: monospace;
+            color: #a5b4fc;
+            margin-top: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .station-description {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .controls-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .btn-play-master {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-primary), var(--accent-purple));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px var(--brand-glow);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-play-master:hover {
+            transform: scale(1.06);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6);
+        }
+
+        .volume-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(15, 23, 42, 0.7);
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .volume-slider {
+            flex: 1;
+            accent-color: var(--brand-primary);
+            cursor: pointer;
+            height: 4px;
+        }
+
+        .catalog-panel {
+            display: flex;
+            flex-direction: column;
+            padding: 0.65rem;
+            gap: 0.4rem;
+            min-height: 0;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .tab-switch-bar {
+            display: flex;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 2px;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            padding: 0.35rem;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tab-btn.active {
+            background: var(--brand-primary);
+            color: #fff;
+        }
+
+        .search-box-catalog {
+            width: 100%;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .search-box-catalog input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            font-size: 0.75rem;
+            padding: 0.45rem 2rem 0.45rem 2rem;
+            border-radius: 0.5rem;
+            outline: none;
+        }
+        .search-box-catalog input:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        }
+        .search-box-catalog .search-icon {
+            position: absolute;
+            left: 0.65rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            fill: var(--text-dim);
+            pointer-events: none;
+        }
+        .search-box-catalog .clear-search-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 2px 5px;
+        }
+
+        .select-filters-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+            flex-shrink: 0;
+        }
+        .select-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .filter-row-inline {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            min-width: 0;
+        }
+        .filter-row-inline .custom-select {
+            flex: 1;
+            min-width: 0;
+        }
+        .custom-select {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            font-size: 0.7rem;
+            padding: 0.4rem 0.5rem;
+            border-radius: 0.4rem;
+            outline: none;
+            cursor: pointer;
+        }
+        .custom-select option {
+            background: #0f172a;
+            color: var(--text-main);
+        }
+
+        .stations-scroll-area {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            padding-right: 0.2rem;
+        }
+
+        .station-item {
+            padding: 0.45rem 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            gap: 0.5rem;
+        }
+        .station-item.active-station {
+            border-color: var(--brand-primary);
+            background: rgba(51, 65, 85, 0.85);
+        }
+
+        .station-avatar-wrapper {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--brand-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .station-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .station-avatar-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: #fff;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--brand-primary), var(--accent-purple));
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 10, 18, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .modal-backdrop.show {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-box {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            max-width: 360px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        }
+        .modal-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.4rem;
+            margin: 0.75rem 0;
+        }
+
+        /* Drum Picker for Sleep Timer */
+        .picker-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .picker-column {
+            position: relative;
+            height: 140px;
+            width: 80px;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .picker-column::-webkit-scrollbar {
+            display: none;
+        }
+        .picker-list {
+            padding: 50px 0;
+            list-style: none;
+            text-align: center;
+        }
+        .picker-item {
+            height: 40px;
+            line-height: 40px;
+            font-size: 1rem;
+            font-family: monospace;
+            color: var(--text-muted);
+            scroll-snap-align: center;
+            cursor: pointer;
+            transition: color 0.15s, font-size 0.15s;
+        }
+        .picker-item.selected {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+        .picker-mask {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0) 35%, rgba(15,23,42,0) 65%, rgba(15,23,42,0.95) 100%);
+            border-radius: 0.6rem;
+        }
+
+        .info-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.75rem;
+        }
+        .info-detail-label {
+            color: var(--text-muted);
+            font-family: monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+        }
+        .info-detail-val {
+            color: var(--text-main);
+            font-weight: 500;
+            text-align: right;
+            max-width: 200px;
+            word-break: break-word;
+        }
+        .tags-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+        }
+        .tag-pill {
+            font-size: 0.6rem;
+            font-family: monospace;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 899px) {
+            .cover-frame-wrapper {
+                max-width: 110px;
+                margin: 0.15rem auto;
+            }
+            .player-card {
+                order: 1;
+                padding: 0.5rem;
+                gap: 0.25rem;
+                max-height: 44dvh;
+            }
+            .catalog-panel {
+                order: 2;
+            }
+            .station-meta {
+                padding: 0;
+            }
+            .controls-wrapper {
+                margin-top: 0.2rem;
+                gap: 0.3rem;
+            }
+            .btn-play-master {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            html, body {
+                height: 100%;
+                overflow: auto;
+            }
+            .app-shell {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            .main-layout {
+                display: grid;
+                grid-template-columns: 320px 1fr;
+                gap: 0.5rem;
+                overflow: visible;
+            }
+            .player-card {
+                max-height: none;
+                order: 1;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
+            .catalog-panel {
+                order: 2;
+                max-height: none;
+            }
+            .cover-frame-wrapper {
+                max-width: 100px;
+                margin: 0.2rem auto;
+            }
+            .station-meta, .controls-wrapper {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="radioAudio" preload="auto"></audio>
+
+    <div class="ambient-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="app-shell">
+
+        <header class="glass-panel">
+            <div class="brand-logo-group">
+                <div class="brand-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
+                        <path d="M3.24 6.15C2.51 6.43 2 7.15 2 8v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2H8.3l7.43-3.71c.41-.21.57-.71.36-1.12-.21-.41-.71-.57-1.12-.36L5.3 7.68c-.76.38-1.35.97-1.76 1.72L3.24 6.15zM4 20V8h16v12H4zm8-9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    <h1>AURA <span class="brand-badge">GLOBAL RADIO</span></h1>
+                </div>
+            </div>
+
+            <div class="status-badge">
+                <span id="statusDot" class="ping-dot"></span>
+                <span id="statusText">READY</span>
+            </div>
+
+            <div class="header-actions">
+                <button id="headerRandomBtn" class="btn-action" title="Random Station" onclick="window.playRandomStation()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+                    <span>Random</span>
+                </button>
+                <button id="sleepTimerBtn" class="btn-action" title="Sleep Timer">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc"><path d="M12.3 2c.43 0 .74.37.7.8-.44 4.5 3 8.35 7.5 8.35.43 0 .8.31.8.74 0 5.14-4.16 9.31-9.3 9.31-5.14 0-9.3-4.17-9.3-9.31 0-4.8 3.63-8.76 8.33-9.25.09-.01.18-.04.27-.04z"/></svg>
+                    <span id="sleepTimerLabel">Sleep</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+
+            <main class="glass-panel player-card">
+
+                <div class="cover-frame-wrapper">
+                    <div class="cover-frame">
+                        <canvas id="coverCanvas" width="300" height="300" class="cover-canvas"></canvas>
+                        <img id="stationLogoImg" src="" alt="Station Cover" class="cover-img">
+
+                        <button id="heartBookmarkBtn" class="btn-heart-bookmark not-favorite disabled" title="Bookmark Station">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="station-meta">
+                    <div class="station-title-row">
+                        <h2 id="activeStationTitle" class="station-title">AURA RADIO</h2>
+                        <button id="stationInfoBtn" class="btn-info-icon disabled" title="Station Info">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="activeTrackTitle" class="track-sub-title">DISCOVER GLOBAL RADIO</p>
+                    <p id="activeStationDesc" class="station-description">Select a station from list or Play Random</p>
+                </div>
+
+                <div class="controls-wrapper">
+                    <div class="controls-row">
+                        <button id="masterPlayBtn" class="btn-play-master" title="Play / Pause">
+                            <svg id="masterPlayIcon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="volume-bar">
+                        <button id="muteBtn" class="btn-ctrl" title="Mute / Unmute" style="color:var(--text-muted); min-width:32px; min-height:32px; border-radius:6px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; cursor:pointer; transition: color 0.15s, background 0.15s; border:none;">
+                            <svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                            </svg>
+                        </button>
+                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.75">
+                        <span id="volumeVal" style="font-size:0.62rem; font-family:monospace; color:var(--text-muted); width:28px; text-align:right;">75%</span>
+                        
+                        <button id="normToggleBtn" title="Volume Normalization (AGC)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc; font-size: 0.6rem; font-family: monospace; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-left: 4px;">NORM</button>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="glass-panel catalog-panel">
+
+                <div class="tab-switch-bar">
+                    <button id="tabAllBtn" class="tab-btn active">All Stations</button>
+                    <button id="tabFavBtn" class="tab-btn">Favorites (<span id="favTabCount">0</span>)</button>
+                </div>
+
+                <div id="searchContainer" class="search-box-catalog">
+                    <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="searchInput" placeholder="Search 30,000+ radio stations...">
+                    <button id="clearSearchBtn" class="clear-search-btn" style="display:none;">✕</button>
+                </div>
+
+                <div id="filterGroup" class="select-filters-row">
+                    <div class="select-group">
+                        <select id="countrySelect" class="custom-select">
+                            <option value="All">All Countries</option>
+                            <option value="US">United States</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="DE">Germany</option>
+                            <option value="FR">France</option>
+                            <option value="IT">Italy</option>
+                            <option value="ES">Spain</option>
+                            <option value="BR">Brazil</option>
+                            <option value="JP">Japan</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                            <option value="PL">Poland</option>
+                            <option value="LT">Lithuania</option>
+                            <option value="EE">Estonia</option>
+                            <option value="LV">Latvia</option>
+                            <option value="UA">Ukraine</option>
+                            <option value="KZ">Kazakhstan</option>
+                            <option value="AT">Austria</option>
+                            <option value="CH">Switzerland</option>
+                            <option value="NL">Netherlands</option>
+                            <option value="SE">Sweden</option>
+                        </select>
+                    </div>
+
+                    <div class="select-group">
+                        <div class="filter-row-inline">
+                            <select id="genreSelect" class="custom-select">
+                            <option value="All">All Genres</option>
+                            <option value="electronic">Electronic & Club</option>
+                            <option value="bass">Bass, DnB & Breaks</option>
+                            <option value="chillout">Chill & Ambient</option>
+                            <option value="synthwave">Synthwave & Retro</option>
+                            <option value="rock">Rock & Metal</option>
+                            <option value="pop">Pop & Commercial</option>
+                            <option value="jazz">Jazz, Blues & Soul</option>
+                            <option value="classical">Classical & Acoustic</option>
+                            <option value="latin">Latin, Reggae & World</option>
+                            <option value="hiphop">Hip-Hop & R&B</option>
+                            <option value="talk">Talk & News</option>
+                            <option value="country">Country & Folk</option>
+                        </select>
+                        <button id="genreInfoBtn" class="btn-info-icon" title="Genre Guide" style="width:28px; height:28px; min-width:28px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                            </svg>
+                        </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="flex:1; display:flex; flex-direction:column; min-height:0; border-top:1px solid rgba(255,255,255,0.08); padding-top:0.35rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                        <span id="listTitleLabel" style="font-size:0.62rem; font-family:monospace; text-transform:uppercase; color:var(--text-muted);">TOP ONLINE STATIONS (<span id="stationCount">0</span>)</span>
+                        <span id="loaderSpin" style="display:none; color:var(--brand-primary); font-size:0.7rem;">●</span>
+                    </div>
+                    <div id="stationsList" class="stations-scroll-area"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <div id="sleepModal" class="modal-backdrop">
+        <div class="modal-box">
+            <button id="closeSleepModal" class="modal-close">✕</button>
+            <h3 style="font-size:0.95rem; font-weight:700;">Sleep Countdown</h3>
+            <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.15rem;">Select time with scroll wheels</p>
+
+            <div class="timer-grid">
+                <button class="btn-action" style="justify-content:center; padding:0.4rem;" onclick="window.selectPresetSleep(15)">15m</button>
+                <button class="btn-action" style="justify-content:center; padding:0.4rem;" onclick="window.selectPresetSleep(30)">30m</button>
+                <button class="btn-action" style="justify-content:center; padding:0.4rem;" onclick="window.selectPresetSleep(45)">45m</button>
+                <button class="btn-action" style="justify-content:center; padding:0.4rem;" onclick="window.selectPresetSleep(60)">60m</button>
+            </div>
+
+            <div class="picker-container">
+                <div class="picker-column" id="hoursPicker">
+                    <div class="picker-mask"></div>
+                    <ul class="picker-list" id="hoursList"></ul>
+                </div>
+                <div style="display:flex; align-items:center; font-weight:bold; font-size:1.2rem; color:var(--text-muted);">:</div>
+                <div class="picker-column" id="minsPicker">
+                    <div class="picker-mask"></div>
+                    <ul class="picker-list" id="minsList"></ul>
+                </div>
+            </div>
+
+            <button id="startWheelTimerBtn" class="btn-action" style="width:100%; justify-content:center; background:var(--brand-primary); color:#fff; font-weight:600; margin-bottom:0.5rem;">Start Timer</button>
+            <button id="cancelTimerBtn" class="btn-action" style="width:100%; justify-content:center; color:var(--accent-pink);">Cancel Timer</button>
+        </div>
+    </div>
+
+    <div id="genreInfoModal" class="modal-backdrop">
+        <div class="modal-box" style="max-width:380px; max-height:80dvh; display:flex; flex-direction:column;">
+            <button id="closeGenreInfoModal" class="modal-close">✕</button>
+            <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:0.25rem;">Genre Guide</h3>
+            <p style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.75rem;">Included tags and styles per category:</p>
+
+            <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.2rem;">
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">⚡ Electronic & Club</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">electronic, edm, techno, house, deep house, tech house, trance, electro, club</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🥁 Bass, DnB & Breaks</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">dnb, drum and bass, jungle, neurofunk, liquid funk, dubstep, bass, breakbeat, uk garage</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌿 Chill & Ambient</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">chillout, ambient, lounge, downtempo, trip hop, meditation, relax, spa, sleep, space</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌆 Synthwave & Retro</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">synthwave, vaporwave, retrowave, darksynth, cyberpunk, 80s, disco, futuresynth, outrun</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎸 Rock & Metal</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">rock, alternative, indie, metal, heavy metal, hard rock, punk, grunge, classic rock, post-rock</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">✨ Pop & Commercial</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">pop, top40, commercial, charts, hits, dance-pop, mainstream, adult contemporary</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎷 Jazz, Blues & Soul</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">jazz, blues, soul, funk, swing, bossa nova, smooth jazz, rnb, r&b</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎻 Classical & Acoustic</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">classical, piano, orchestra, acoustic, folk, instrumental, opera, celtic, chamber</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌍 Latin, Reggae & World</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">latin, salsa, reggaeton, reggae, dancehall, afrobeat, world, flamenco, ska</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎤 Hip-Hop & R&B</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">hip hop, rap, r&b, urban, trap, old school hip hop</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">📻 Talk & News</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">news, talk, podcast, sports, interview, weather, public radio, dialogue</div>
+                </div>
+                <div class="glass-card" style="padding:0.5rem;">
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎄 Country & Folk</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">country, americana, bluegrass, folk rock, traditional</div>
+                </div>
+            </div>
+
+            <button id="closeGenreInfoModalBtn" class="btn-action" style="width:100%; justify-content:center; margin-top:0.75rem; flex-shrink:0;">Close</button>
+        </div>
+    </div>
+
+    <div id="infoModal" class="modal-backdrop">
+        <div class="modal-box">
+            <button id="closeInfoModal" class="modal-close">✕</button>
+            <h3 id="modalInfoTitle" style="font-size:0.95rem; font-weight:700; padding-right:1rem; word-break:break-word;">Station Info</h3>
+            <p style="font-size:0.65rem; color:var(--text-muted); margin-top:0.1rem; margin-bottom:0.75rem;">Detailed station info</p>
+
+            <div class="info-detail-row">
+                <span class="info-detail-label">Location</span>
+                <span id="infoModalLocation" class="info-detail-val">-</span>
+            </div>
+            <div class="info-detail-row">
+                <span class="info-detail-label">Codec / Bitrate</span>
+                <span id="infoModalAudio" class="info-detail-val">-</span>
+            </div>
+            <div class="info-detail-row">
+                <span class="info-detail-label">Primary Tag</span>
+                <span id="infoModalGenre" class="info-detail-val">-</span>
+            </div>
+
+            <div style="margin-top:0.6rem;">
+                <span class="info-detail-label">All Tags</span>
+                <div id="infoModalTags" class="tags-cloud"></div>
+            </div>
+
+            <button id="closeInfoModalBtn" class="btn-action" style="width:100%; justify-content:center; margin-top:1rem;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const RADIO_SERVERS = [
+                    'https://de1.api.radio-browser.info',
+                    'https://nl1.api.radio-browser.info',
+                    'https://at1.api.radio-browser.info'
+                ];
+                let currentServerIdx = 0;
+
+                const CURATED_STATIONS = [
+                    {
+                        id: 'somafm-groovesalad',
+                        name: 'SomaFM Groove Salad',
+                        genre: 'LO-FI',
+                        tags: 'lo-fi, chillout, ambient, downtempo',
+                        country: 'United States',
+                        countrycode: 'US',
+                        url: 'https://ice1.somafm.com/groovesalad-128-mp3',
+                        favicon: 'https://somafm.com/img/groovesalad-120.png',
+                        bitrate: 128,
+                        codec: 'MP3',
+                        location: 'San Francisco, USA',
+                        description: 'Chilled lo-fi downtempo grooves.'
+                    },
+                    {
+                        id: 'nightwave-plaza',
+                        name: 'Nightwave Plaza',
+                        genre: 'SYNTHWAVE',
+                        tags: 'synthwave, vaporwave, electronic',
+                        country: 'Worldwide',
+                        countrycode: 'WW',
+                        url: 'https://stream.plaza.one/mp3',
+                        favicon: 'https://plaza.one/img/logo.png',
+                        bitrate: 128,
+                        codec: 'MP3',
+                        location: 'Worldwide',
+                        description: '24/7 Vaporwave & Synthwave radio.'
+                    },
+                    {
+                        id: 'radio-swiss-jazz',
+                        name: 'Radio Swiss Jazz',
+                        genre: 'JAZZ',
+                        tags: 'jazz, swing, blues',
+                        country: 'Switzerland',
+                        countrycode: 'CH',
+                        url: 'https://stream.srg-ssr.ch/m/rsj/mp3_128',
+                        favicon: '',
+                        bitrate: 128,
+                        codec: 'MP3',
+                        location: 'Basel, Switzerland',
+                        description: 'Smooth jazz, swing and soulful blues.'
+                    },
+                    {
+                        id: 'somafm-deepspace',
+                        name: 'SomaFM Deep Space One',
+                        genre: 'AMBIENT',
+                        tags: 'ambient, space, chillout',
+                        country: 'United States',
+                        countrycode: 'US',
+                        url: 'https://ice1.somafm.com/deepspaceone-128-mp3',
+                        favicon: 'https://somafm.com/img/deepspaceone-120.png',
+                        bitrate: 128,
+                        codec: 'MP3',
+                        location: 'San Francisco, USA',
+                        description: 'Deep space ambient music.'
+                    },
+                    {
+                        id: 'defcon-radio',
+                        name: 'DEF CON Radio',
+                        genre: 'ELECTRONIC',
+                        tags: 'electronic, techno, ambient, chillout',
+                        country: 'United States',
+                        countrycode: 'US',
+                        url: 'https://ice1.somafm.com/defcon-128-mp3',
+                        favicon: 'https://somafm.com/img/defcon120.png',
+                        bitrate: 128,
+                        codec: 'MP3',
+                        location: 'Las Vegas, USA',
+                        description: 'Music for coding and focus.'
+                    },
+                    {
+                        id: 'somafm-indiepop',
+                        name: 'SomaFM Indie Pop',
+                        genre: 'ROCK',
+                        tags: 'rock, indie, pop',
+                        country: 'United States',
+                        countrycode: 'US',
+                        url: 'https://ice1.somafm.com/indiepop-128-mp3',
+                        favicon: '',
+                        bitrate: 128,
+                        codec: 'MP3',
+                        location: 'San Francisco, USA',
+                        description: 'Classic and modern indie rock.'
+                    }
+                ];
+
+                let fetchedStations = [];
+                let activeStation = null;
+                let isPlaying = false;
+                let activeCountry = 'All';
+                let activeGenre = 'All';
+                let searchQuery = '';
+                
+                let favoritesMap = new Map();
+                let activeTab = 'all';
+                let sleepTimerId = null;
+                let sleepTargetEndTime = 0;
+
+                // Web Audio API Normalization setup
+                let audioCtx = null;
+                let sourceNode = null;
+                let compressorNode = null;
+                let isNormEnabled = false;
+
+                try {
+                    const savedNorm = localStorage.getItem('aura_norm_enabled');
+                    if (savedNorm !== null) isNormEnabled = JSON.parse(savedNorm);
+                } catch(e) {}
+
+                const normBtn = document.getElementById('normToggleBtn');
+                function updateNormBtnUI() {
+                    if (isNormEnabled) {
+                        normBtn.style.background = 'rgba(99, 102, 241, 0.35)';
+                        normBtn.style.borderColor = 'var(--brand-primary)';
+                        normBtn.style.color = '#fff';
+                        normBtn.style.boxShadow = '0 0 10px rgba(99, 102, 241, 0.4)';
+                    } else {
+                        normBtn.style.background = 'rgba(99, 102, 241, 0.15)';
+                        normBtn.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+                        normBtn.style.color = '#a5b4fc';
+                        normBtn.style.boxShadow = 'none';
+                    }
+                }
+                updateNormBtnUI();
+
+                normBtn.addEventListener('click', () => {
+                    isNormEnabled = !isNormEnabled;
+                    try { localStorage.setItem('aura_norm_enabled', JSON.stringify(isNormEnabled)); } catch(e) {}
+                    updateNormBtnUI();
+                    setupAudioContext();
+                });
+
+                const audioEl = document.getElementById('radioAudio');
+                audioEl.crossOrigin = "anonymous";
+
+                function setupAudioContext() {
+                    if (!audioCtx) {
+                        const AudioContext = window.AudioContext || window.webkitAudioContext;
+                        if (AudioContext) {
+                            audioCtx = new AudioContext();
+                        }
+                    }
+                    if (!audioCtx) return;
+
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+
+                    if (!sourceNode) {
+                        try {
+                            sourceNode = audioCtx.createMediaElementSource(audioEl);
+                            compressorNode = audioCtx.createDynamicsCompressor();
+                            // Professional studio compressor settings for radio loudness and clarity
+                            compressorNode.threshold.setValueAtTime(-24, audioCtx.currentTime);
+                            compressorNode.knee.setValueAtTime(12, audioCtx.currentTime);
+                            compressorNode.ratio.setValueAtTime(8, audioCtx.currentTime);
+                            compressorNode.attack.setValueAtTime(0.003, audioCtx.currentTime);
+                            compressorNode.release.setValueAtTime(0.250, audioCtx.currentTime);
+
+                            sourceNode.connect(compressorNode);
+                            compressorNode.connect(audioCtx.destination);
+                        } catch (e) {
+                            console.log("Web Audio routing note:", e);
+                        }
+                    }
+                }
+
+                try {
+                    const savedObjects = localStorage.getItem('aura_fav_objects');
+                    if (savedObjects) {
+                        const parsed = JSON.parse(savedObjects);
+                        parsed.forEach(st => favoritesMap.set(st.id, st));
+                    }
+                } catch(e) {}
+
+                function saveFavoritesToStorage() {
+                    try {
+                        const arr = Array.from(favoritesMap.values());
+                        localStorage.setItem('aura_fav_objects', JSON.stringify(arr));
+                    } catch(e) {}
+                }
+
+                audioEl.addEventListener('waiting', () => {
+                    if (isPlaying) updateStatus("BUFFERING...", "var(--accent-pink)");
+                });
+
+                audioEl.addEventListener('playing', () => {
+                    updateStatus("LIVE STREAM", "var(--accent-emerald)");
+                });
+
+                audioEl.addEventListener('stalled', () => {
+                    if (isPlaying) {
+                        updateStatus("RECONNECTING...", "var(--accent-pink)");
+                        audioEl.load();
+                        audioEl.play().catch(() => {});
+                    }
+                });
+
+                audioEl.addEventListener('error', () => {
+                    if (isPlaying) {
+                        isPlaying = false;
+                        updatePlayStateUI();
+                        updateStatus("ERROR", "red");
+                    }
+                });
+
+                function togglePlay() {
+                    setupAudioContext();
+                    if (!activeStation) {
+                        const pool = activeTab === 'fav' 
+                            ? Array.from(favoritesMap.values())
+                            : (fetchedStations.length > 0 ? fetchedStations : filterCuratedByGenre());
+                        if (pool.length > 0) {
+                            selectStation(pool[0]);
+                            return;
+                        }
+                    }
+
+                    if (isPlaying) {
+                        audioEl.pause();
+                        isPlaying = false;
+                        updatePlayStateUI();
+                        updateStatus("PAUSED", "var(--text-dim)");
+                    } else {
+                        if (!audioEl.src || audioEl.src !== activeStation.url) {
+                            audioEl.src = activeStation.url;
+                        }
+                        updateStatus("CONNECTING...", "var(--accent-pink)");
+                        audioEl.play().then(() => {
+                            isPlaying = true;
+                            updatePlayStateUI();
+                            updateStatus("LIVE STREAM", "var(--accent-emerald)");
+                        }).catch(err => {
+                            isPlaying = false;
+                            updatePlayStateUI();
+                            updateStatus("ERROR", "red");
+                        });
+                    }
+                }
+
+                function updatePlayStateUI() {
+                    const icon = document.getElementById('masterPlayIcon');
+                    icon.innerHTML = isPlaying ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+                    renderStationsList();
+                }
+
+                function updateStatus(text, color) {
+                    document.getElementById('statusText').innerText = text;
+                    document.getElementById('statusDot').style.background = color;
+                }
+
+                function selectStation(st) {
+                    setupAudioContext();
+                    activeStation = st;
+                    audioEl.src = activeStation.url;
+                    updatePlayerUI();
+                    
+                    audioEl.play().then(() => {
+                        isPlaying = true;
+                        updatePlayStateUI();
+                        updateStatus("LIVE STREAM", "var(--accent-emerald)");
+                    }).catch(err => {
+                        isPlaying = false;
+                        updatePlayStateUI();
+                        updateStatus("ERROR", "red");
+                    });
+                }
+
+                function playRandomStation() {
+                    const pool = fetchedStations.length > 0 ? fetchedStations : CURATED_STATIONS;
+                    if (pool.length > 0) {
+                        const randIdx = Math.floor(Math.random() * pool.length);
+                        selectStation(pool[randIdx]);
+                    }
+                }
+                window.playRandomStation = playRandomStation;
+
+                function updatePlayerUI() {
+                    const heartBtn = document.getElementById('heartBookmarkBtn');
+                    const infoBtn = document.getElementById('stationInfoBtn');
+
+                    if (!activeStation) {
+                        document.getElementById('activeStationTitle').innerText = 'AURA RADIO';
+                        document.getElementById('activeTrackTitle').innerText = 'DISCOVER GLOBAL RADIO';
+                        document.getElementById('activeStationDesc').innerHTML = 'Select a station from list or Play Random';
+                        heartBtn.className = "btn-heart-bookmark not-favorite disabled";
+                        infoBtn.className = "btn-info-icon disabled";
+                        renderCanvasLogo();
+                    } else {
+                        document.getElementById('activeStationTitle').innerText = activeStation.name;
+                        document.getElementById('activeTrackTitle').innerText = 'Live Stream Broadcast';
+                        document.getElementById('activeStationDesc').innerText = `${activeStation.location || 'Global'} • ${activeStation.description || 'Live stream'}`;
+
+                        infoBtn.className = "btn-info-icon";
+
+                        if (favoritesMap.has(activeStation.id)) {
+                            heartBtn.className = "btn-heart-bookmark is-favorite";
+                        } else {
+                            heartBtn.className = "btn-heart-bookmark not-favorite";
+                        }
+
+                        const imgEl = document.getElementById('stationLogoImg');
+                        imgEl.classList.remove('loaded');
+                        if (activeStation.favicon && activeStation.favicon.startsWith('http')) {
+                            imgEl.src = activeStation.favicon;
+                        } else {
+                            renderCanvasLogo();
+                        }
+                    }
+
+                    renderStationsList();
+                }
+
+                const imgEl = document.getElementById('stationLogoImg');
+                imgEl.onload = () => imgEl.classList.add('loaded');
+                imgEl.onerror = () => {
+                    imgEl.classList.remove('loaded');
+                    renderCanvasLogo();
+                };
+
+                function renderCanvasLogo() {
+                    const canvas = document.getElementById('coverCanvas');
+                    const ctx = canvas.getContext('2d');
+                    const w = canvas.width = 300;
+                    const h = canvas.height = 300;
+
+                    const grad = ctx.createLinearGradient(0, 0, w, h);
+                    grad.addColorStop(0, '#1e1b4b');
+                    grad.addColorStop(0.5, '#4338ca');
+                    grad.addColorStop(1, '#6366f1');
+
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                    ctx.lineWidth = 8;
+                    ctx.beginPath();
+                    ctx.arc(w/2, h/2, 90, 0, Math.PI*2);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('AURA', w/2, h/2 - 10);
+
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                    ctx.font = '600 14px monospace';
+                    const genreText = activeStation ? (activeStation.genre || 'RADIO').toUpperCase() : 'GLOBAL RADIO';
+                    ctx.fillText(genreText, w/2, h/2 + 25);
+                }
+
+                const GENRE_MAPPINGS = {
+                    electronic: ['electronic', 'edm', 'techno', 'house', 'deep house', 'tech house', 'trance', 'electro', 'club'],
+                    bass: ['dnb', 'drum and bass', 'jungle', 'neurofunk', 'liquid funk', 'dubstep', 'bass', 'breakbeat', 'uk garage'],
+                    chillout: ['chillout', 'ambient', 'lounge', 'downtempo', 'trip hop', 'meditation', 'relax', 'spa', 'sleep', 'space'],
+                    synthwave: ['synthwave', 'vaporwave', 'retrowave', 'darksynth', 'cyberpunk', '80s', 'disco', 'futuresynth', 'outrun'],
+                    rock: ['rock', 'alternative', 'indie', 'metal', 'heavy metal', 'hard rock', 'punk', 'grunge', 'classic rock', 'post-rock'],
+                    pop: ['pop', 'top40', 'commercial', 'charts', 'hits', 'dance-pop', 'mainstream', 'adult contemporary'],
+                    jazz: ['jazz', 'blues', 'soul', 'funk', 'swing', 'bossa nova', 'smooth jazz', 'rnb', 'r&b'],
+                    classical: ['classical', 'piano', 'orchestra', 'acoustic', 'folk', 'instrumental', 'opera', 'celtic', 'chamber'],
+                    latin: ['latin', 'salsa', 'reggaeton', 'reggae', 'dancehall', 'afrobeat', 'world', 'flamenco', 'ska'],
+                    hiphop: ['hip hop', 'rap', 'r&b', 'urban', 'trap', 'old school hip hop'],
+                    talk: ['news', 'talk', 'podcast', 'sports', 'interview', 'weather', 'public radio', 'dialogue'],
+                    country: ['country', 'americana', 'bluegrass', 'folk rock', 'traditional']
+                };
+
+                function stationMatchesGenre(stationTags, genreKey) {
+                    if (genreKey === 'All') return true;
+                    const tags = stationTags ? stationTags.toLowerCase() : '';
+                    const allowedTags = GENRE_MAPPINGS[genreKey] || [];
+                    return allowedTags.some(t => tags.includes(t));
+                }
+
+                async function fetchGlobalStations() {
+                    const spin = document.getElementById('loaderSpin');
+                    if (spin) spin.style.display = 'inline';
+
+                    const server = RADIO_SERVERS[currentServerIdx];
+                    let url = `${server}/json/stations/search?limit=60&order=clickcount&reverse=true&hidebroken=true`;
+
+                    const hasSearchQuery = searchQuery.trim().length > 0;
+                    if (hasSearchQuery) url += `&name=${encodeURIComponent(searchQuery.trim())}`;
+                    if (activeGenre !== 'All') {
+                        const tagsArr = GENRE_MAPPINGS[activeGenre] || [];
+                        if (tagsArr.length > 0) {
+                            url += `&tag=${encodeURIComponent(tagsArr[0])}`;
+                        }
+                    }
+                    if (activeCountry !== 'All') url += `&countrycode=${encodeURIComponent(activeCountry)}`;
+
+                    try {
+                        const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                        if (!res.ok) throw new Error("Offline");
+                        const data = await res.json();
+                        
+                        if (Array.isArray(data)) {
+                            let mapped = data.map(st => {
+                                const allTagsStr = st.tags ? st.tags.toLowerCase() : '';
+                                const tagList = allTagsStr.split(',').map(t => t.trim()).filter(Boolean);
+                                let displayTag = tagList.length > 0 ? tagList[0].toUpperCase() : 'RADIO';
+
+                                return {
+                                    id: st.stationuuid || String(Math.random()),
+                                    name: st.name ? st.name.trim() : 'Unknown Station',
+                                    genre: displayTag,
+                                    tags: allTagsStr,
+                                    country: st.country || 'Global',
+                                    countrycode: st.countrycode || 'WW',
+                                    url: st.url_resolved || st.url,
+                                    favicon: st.favicon && st.favicon.startsWith('http') ? st.favicon.trim() : '',
+                                    bitrate: st.bitrate || 128,
+                                    codec: st.codec || 'MP3',
+                                    location: st.country || 'Worldwide',
+                                    description: st.tags ? st.tags.split(',').slice(0, 3).map(t => `#${t.trim()}`).join(' • ') : 'Live stream'
+                                };
+                            });
+
+                            if (activeGenre !== 'All') {
+                                mapped = mapped.filter(st => stationMatchesGenre(st.tags, activeGenre));
+                            }
+
+                            fetchedStations = mapped;
+                        } else {
+                            fetchedStations = hasSearchQuery ? [] : filterCuratedByGenre();
+                        }
+                    } catch(err) {
+                        currentServerIdx = (currentServerIdx + 1) % RADIO_SERVERS.length;
+                        fetchedStations = hasSearchQuery ? [] : filterCuratedByGenre();
+                    } finally {
+                        if (spin) spin.style.display = 'none';
+                        renderStationsList();
+                    }
+                }
+
+                function filterCuratedByGenre() {
+                    let pool = CURATED_STATIONS;
+                    if (activeGenre !== 'All') {
+                        pool = pool.filter(s => stationMatchesGenre(s.tags, activeGenre));
+                    }
+                    if (searchQuery.trim().length > 0) {
+                        const q = searchQuery.trim().toLowerCase();
+                        pool = pool.filter(s => s.name.toLowerCase().includes(q) || s.tags.toLowerCase().includes(q));
+                    }
+                    return pool;
+                }
+
+                function renderStationsList() {
+                    const listEl = document.getElementById('stationsList');
+                    document.getElementById('favTabCount').innerText = favoritesMap.size;
+
+                    if (activeTab === 'fav') {
+                        document.getElementById('filterGroup').style.display = 'none';
+                        document.getElementById('searchContainer').style.display = 'none';
+                        document.getElementById('listTitleLabel').innerHTML = `FAVORITES (${favoritesMap.size})`;
+                        
+                        const favList = Array.from(favoritesMap.values());
+                        if (favList.length === 0) {
+                            listEl.innerHTML = `<div style="text-align:center; padding:1.5rem; font-size:0.75rem; color:var(--text-dim);">No favorite stations yet.</div>`;
+                            return;
+                        }
+                        listEl.innerHTML = favList.map(s => renderStationItemHTML(s)).join('');
+                    } else {
+                        document.getElementById('filterGroup').style.display = 'grid';
+                        document.getElementById('searchContainer').style.display = 'block';
+                        
+                        const pool = fetchedStations;
+                        document.getElementById('listTitleLabel').innerHTML = `TOP ONLINE STATIONS (<span id="stationCount">${pool.length}</span>)`;
+                        if (pool.length === 0) {
+                            listEl.innerHTML = `<div style="text-align:center; padding:1.5rem; font-size:0.75rem; color:var(--text-dim);">No stations found.</div>`;
+                            return;
+                        }
+                        listEl.innerHTML = pool.map(s => renderStationItemHTML(s)).join('');
+                    }
+                }
+
+                function renderStationItemHTML(s) {
+                    const isActive = activeStation && s.id === activeStation.id;
+                    const hasFavicon = s.favicon && s.favicon.startsWith('http');
+                    const initial = s.name ? s.name.charAt(0).toUpperCase() : 'R';
+
+                    return `
+                        <div class="glass-card station-item ${isActive ? 'active-station' : ''}" onclick="window.selectStationById('${s.id}')">
+                            <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
+                                <div class="station-avatar-wrapper">
+                                    ${hasFavicon ? `<img src="${s.favicon}" class="station-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Logo">` : ''}
+                                    <div class="station-avatar-fallback" style="${hasFavicon ? 'display:none;' : 'display:flex;'}">${initial}</div>
+                                </div>
+                                <div style="min-width:0;">
+                                    <div style="font-size:0.72rem; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.name}</div>
+                                    <div style="font-size:0.6rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.location}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                window.selectStationById = (id) => {
+                    const found = fetchedStations.find(s => s.id === id) || CURATED_STATIONS.find(s => s.id === id) || favoritesMap.get(id);
+                    if (found) selectStation(found);
+                };
+
+                document.getElementById('tabAllBtn').addEventListener('click', () => {
+                    activeTab = 'all';
+                    document.getElementById('tabAllBtn').classList.add('active');
+                    document.getElementById('tabFavBtn').classList.remove('active');
+                    renderStationsList();
+                });
+                document.getElementById('tabFavBtn').addEventListener('click', () => {
+                    activeTab = 'fav';
+                    document.getElementById('tabFavBtn').classList.add('active');
+                    document.getElementById('tabAllBtn').classList.remove('active');
+                    renderStationsList();
+                });
+
+                document.getElementById('masterPlayBtn').addEventListener('click', togglePlay);
+
+                document.getElementById('heartBookmarkBtn').addEventListener('click', () => {
+                    if (!activeStation) return;
+                    if (favoritesMap.has(activeStation.id)) {
+                        favoritesMap.delete(activeStation.id);
+                    } else {
+                        favoritesMap.set(activeStation.id, activeStation);
+                    }
+                    saveFavoritesToStorage();
+                    updatePlayerUI();
+                });
+
+                let lastVolumeBeforeMute = 0.75;
+
+                function updateMuteUI(isMuted) {
+                    const muteBtn = document.getElementById('muteBtn');
+                    const muteIcon = document.getElementById('muteIcon');
+                    if (isMuted) {
+                        muteIcon.innerHTML = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C22.33 14.95 23 13.54 23 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+                        muteBtn.style.color = 'var(--accent-pink)';
+                        muteBtn.style.background = 'rgba(236, 72, 153, 0.15)';
+                    } else {
+                        muteIcon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>';
+                        muteBtn.style.color = 'var(--text-muted)';
+                        muteBtn.style.background = 'rgba(255, 255, 255, 0.04)';
+                    }
+                }
+
+                document.getElementById('volumeSlider').addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    audioEl.volume = val;
+                    document.getElementById('volumeVal').innerText = `${Math.round(val * 100)}%`;
+                    if (val === 0) {
+                        updateMuteUI(true);
+                    } else {
+                        updateMuteUI(false);
+                    }
+                });
+
+                document.getElementById('muteBtn').addEventListener('click', () => {
+                    const slider = document.getElementById('volumeSlider');
+                    if (audioEl.volume > 0) {
+                        lastVolumeBeforeMute = audioEl.volume;
+                        slider.value = 0;
+                        audioEl.volume = 0;
+                        updateMuteUI(true);
+                    } else {
+                        const restoreVal = lastVolumeBeforeMute > 0 ? lastVolumeBeforeMute : 0.75;
+                        slider.value = restoreVal;
+                        audioEl.volume = restoreVal;
+                        updateMuteUI(false);
+                    }
+                    slider.dispatchEvent(new Event('input'));
+                });
+
+                document.getElementById('countrySelect').addEventListener('change', (e) => {
+                    activeCountry = e.target.value;
+                    fetchGlobalStations();
+                });
+                document.getElementById('genreSelect').addEventListener('change', (e) => {
+                    activeGenre = e.target.value;
+                    fetchGlobalStations();
+                });
+
+                const searchInput = document.getElementById('searchInput');
+                const clearSearchBtn = document.getElementById('clearSearchBtn');
+                let searchTimer = null;
+
+                searchInput.addEventListener('input', (e) => {
+                    searchQuery = e.target.value;
+                    clearSearchBtn.style.display = searchQuery.length > 0 ? 'inline' : 'none';
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(fetchGlobalStations, 300);
+                });
+
+                clearSearchBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    searchQuery = '';
+                    clearSearchBtn.style.display = 'none';
+                    fetchGlobalStations();
+                });
+
+                // Drum Picker initialization & logic
+                function initDrumPickers() {
+                    const hoursList = document.getElementById('hoursList');
+                    const minsList = document.getElementById('minsList');
+
+                    let hHtml = '<li class="picker-item" data-val="0">00h</li>';
+                    for (let i = 0; i <= 12; i++) {
+                        hHtml += `<li class="picker-item" data-val="${i}">${String(i).padStart(2, '0')}h</li>`;
+                    }
+                    hoursList.innerHTML = hHtml;
+
+                    let mHtml = '<li class="picker-item" data-val="0">00m</li>';
+                    for (let i = 0; i < 60; i += 5) {
+                        mHtml += `<li class="picker-item" data-val="${i}">${String(i).padStart(2, '0')}m</li>`;
+                    }
+                    minsList.innerHTML = mHtml;
+
+                    setupPickerScroll('hoursPicker', 'hoursList');
+                    setupPickerScroll('minsPicker', 'minsList');
+                }
+
+                function setupPickerScroll(containerId, listId) {
+                    const container = document.getElementById(containerId);
+                    const list = document.getElementById(listId);
+                    const items = list.querySelectorAll('.picker-item');
+                    const itemHeight = 40;
+
+                    container.addEventListener('scroll', () => {
+                        const scrollTop = container.scrollTop;
+                        const index = Math.round(scrollTop / itemHeight);
+                        items.forEach((item, idx) => {
+                            if (idx === index) {
+                                item.classList.add('selected');
+                            } else {
+                                item.classList.remove('selected');
+                            }
+                        });
+                    });
+
+                    items.forEach((item, idx) => {
+                        item.addEventListener('click', () => {
+                            container.scrollTo({ top: idx * itemHeight, behavior: 'smooth' });
+                        });
+                    });
+
+                    // Set default to 30m (index for 30 in 0, 5, 10, 15, 20, 25, 30 is 7)
+                    if (containerId === 'minsList' || containerId === 'minsPicker') {
+                        container.scrollTop = 7 * itemHeight;
+                    } else {
+                        container.scrollTop = 0;
+                    }
+                    container.dispatchEvent(new Event('scroll'));
+                }
+
+                function getPickerValue(containerId) {
+                    const container = document.getElementById(containerId);
+                    const itemHeight = 40;
+                    const index = Math.round(container.scrollTop / itemHeight);
+                    const list = container.querySelector('.picker-list');
+                    const items = list.querySelectorAll('.picker-item');
+                    if (items[index]) {
+                        return parseInt(items[index].getAttribute('data-val'), 10) || 0;
+                    }
+                    return 0;
+                }
+
+                initDrumPickers();
+
+                document.getElementById('sleepTimerBtn').addEventListener('click', () => toggleModal('sleepModal'));
+                document.getElementById('closeSleepModal').addEventListener('click', () => toggleModal('sleepModal'));
+
+                window.selectPresetSleep = (mins) => {
+                    const h = Math.floor(mins / 60);
+                    const m = mins % 60;
+                    // scroll pickers
+                    const hContainer = document.getElementById('hoursPicker');
+                    const mContainer = document.getElementById('minsPicker');
+                    hContainer.scrollTop = h * 40;
+                    // find closest multiple of 5 for mins
+                    const mStep = Math.round(m / 5);
+                    mContainer.scrollTop = mStep * 40;
+                    startTimerFromPickers();
+                };
+
+                function startTimerFromPickers() {
+                    const hours = getPickerValue('hoursPicker');
+                    const mins = getPickerValue('minsPicker');
+                    const totalMins = (hours * 60) + mins;
+                    if (totalMins <= 0) return;
+                    setSleepTimerMinutes(totalMins);
+                    toggleModal('sleepModal');
+                }
+
+                document.getElementById('startWheelTimerBtn').addEventListener('click', startTimerFromPickers);
+
+                function setSleepTimerMinutes(mins) {
+                    if (sleepTimerId) clearInterval(sleepTimerId);
+                    sleepTargetEndTime = Date.now() + (mins * 60 * 1000);
+                    
+                    const btn = document.getElementById('sleepTimerBtn');
+                    btn.style.background = 'linear-gradient(135deg, var(--brand-primary), var(--accent-purple))';
+                    btn.style.borderColor = 'rgba(255,255,255,0.4)';
+                    btn.style.boxShadow = '0 0 14px var(--brand-glow)';
+
+                    updateTimerDisplay();
+                    sleepTimerId = setInterval(updateTimerDisplay, 1000);
+                }
+
+                function updateTimerDisplay() {
+                    const remainingMs = sleepTargetEndTime - Date.now();
+                    if (remainingMs <= 0) {
+                        if (sleepTimerId) clearInterval(sleepTimerId);
+                        sleepTimerId = null;
+                        resetSleepTimerUI();
+                        if (isPlaying) togglePlay();
+                        return;
+                    }
+
+                    const totalSecs = Math.floor(remainingMs / 1000);
+                    const hrs = Math.floor(totalSecs / 3600);
+                    const mins = Math.floor((totalSecs % 3600) / 60);
+                    const secs = totalSecs % 60;
+
+                    const timeStr = hrs > 0 
+                        ? `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`
+                        : `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+
+                    document.getElementById('sleepTimerLabel').innerHTML = `<span style="font-variant-numeric: tabular-nums;">⏱ ${timeStr}</span>`;
+                }
+
+                function resetSleepTimerUI() {
+                    const btn = document.getElementById('sleepTimerBtn');
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.boxShadow = '';
+                    document.getElementById('sleepTimerLabel').innerText = 'Sleep';
+                }
+
+                document.getElementById('cancelTimerBtn').addEventListener('click', () => {
+                    if (sleepTimerId) clearInterval(sleepTimerId);
+                    sleepTimerId = null;
+                    resetSleepTimerUI();
+                    toggleModal('sleepModal');
+                });
+
+                document.getElementById('stationInfoBtn').addEventListener('click', () => {
+                    if (!activeStation) return;
+                    document.getElementById('modalInfoTitle').innerText = activeStation.name;
+                    document.getElementById('infoModalLocation').innerText = activeStation.location || 'Worldwide';
+                    document.getElementById('infoModalAudio').innerText = `${activeStation.codec || 'MP3'} / ${activeStation.bitrate || 128} kbps`;
+                    document.getElementById('infoModalGenre').innerText = activeStation.genre || 'RADIO';
+
+                    const tagsContainer = document.getElementById('infoModalTags');
+                    if (activeStation.tags) {
+                        const rawTags = activeStation.tags.split(',').map(t => t.trim()).filter(Boolean);
+                        tagsContainer.innerHTML = rawTags.map(t => `<span class="tag-pill">#${t}</span>`).join('');
+                    } else {
+                        tagsContainer.innerHTML = `<span style="font-size:0.7rem; color:var(--text-dim);">No tags</span>`;
+                    }
+
+                    toggleModal('infoModal');
+                });
+
+                document.getElementById('closeInfoModal').addEventListener('click', () => toggleModal('infoModal'));
+                document.getElementById('closeInfoModalBtn').addEventListener('click', () => toggleModal('infoModal'));
+
+                function toggleModal(id) {
+                    const m = document.getElementById(id);
+                    m.classList.toggle('show');
+                }
+
+                document.getElementById('genreInfoBtn').addEventListener('click', () => {
+                    toggleModal('genreInfoModal');
+                });
+                document.getElementById('closeGenreInfoModal').addEventListener('click', () => toggleModal('genreInfoModal'));
+                document.getElementById('closeGenreInfoModalBtn').addEventListener('click', () => toggleModal('genreInfoModal'));
+
+                fetchGlobalStations();
+                updatePlayerUI();
+
+            } catch (err) {
+                console.error("Runtime error:", err);
+            }
+        });
+    </script>
+</body>
+</html>
