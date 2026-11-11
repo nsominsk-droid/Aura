@@ -1286,20 +1286,20 @@
                         audioEl.pause();
                         isPlaying = false;
                         updatePlayStateUI();
-                        updateStatus("PAUSED", "var(--text-dim)");
+                        
                     } else {
                         if (!audioEl.src || audioEl.src !== activeStation.url) {
                             audioEl.src = activeStation.url;
                         }
-                        updateStatus("CONNECTING...", "var(--accent-pink)");
+                        
                         audioEl.play().then(() => {
                             isPlaying = true;
                             updatePlayStateUI();
-                            updateStatus("LIVE STREAM", "var(--accent-emerald)");
+                            
                         }).catch(err => {
                             isPlaying = false;
                             updatePlayStateUI();
-                            updateStatus("ERROR", "red");
+                            
                         });
                     }
                 }
@@ -1308,11 +1308,6 @@
                     const icon = document.getElementById('masterPlayIcon');
                     icon.innerHTML = isPlaying ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
                     renderStationsList();
-                }
-
-                function updateStatus(text, color) {
-                    document.getElementById('statusText').innerText = text;
-                    document.getElementById('statusDot').style.background = color;
                 }
 
                 function selectStation(st) {
@@ -1324,22 +1319,13 @@
                     audioEl.play().then(() => {
                         isPlaying = true;
                         updatePlayStateUI();
-                        updateStatus("LIVE STREAM", "var(--accent-emerald)");
+                        
                     }).catch(err => {
                         isPlaying = false;
                         updatePlayStateUI();
-                        updateStatus("ERROR", "red");
+                        
                     });
                 }
-
-                function playRandomStation() {
-                    const pool = fetchedStations.length > 0 ? fetchedStations : CURATED_STATIONS;
-                    if (pool.length > 0) {
-                        const randIdx = Math.floor(Math.random() * pool.length);
-                        selectStation(pool[randIdx]);
-                    }
-                }
-                window.playRandomStation = playRandomStation;
 
                 function updatePlayerUI() {
                     const heartBtn = document.getElementById('heartBookmarkBtn');
