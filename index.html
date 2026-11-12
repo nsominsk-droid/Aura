@@ -1654,13 +1654,13 @@
                     const minsList = document.getElementById('minsList');
 
                     let hHtml = '<li class="picker-item" data-val="0">00h</li>';
-                    for (let i = 0; i <= 12; i++) {
+                    for (let i = 1; i <= 12; i++) {
                         hHtml += `<li class="picker-item" data-val="${i}">${String(i).padStart(2, '0')}h</li>`;
                     }
                     hoursList.innerHTML = hHtml;
 
                     let mHtml = '<li class="picker-item" data-val="0">00m</li>';
-                    for (let i = 0; i < 60; i += 5) {
+                    for (let i = 1; i < 60; i += 5) {
                         mHtml += `<li class="picker-item" data-val="${i}">${String(i).padStart(2, '0')}m</li>`;
                     }
                     minsList.innerHTML = mHtml;
