@@ -839,7 +839,25 @@
                     <p id="activeStationDesc" class="station-description">Select a station from list</p>
                 </div>
 
-                
+                <div class="controls-wrapper">
+                    <div class="controls-row">
+                        <button id="masterPlayBtn" class="btn-play-master" title="Play / Pause">
+                            <svg id="masterPlayIcon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="volume-bar">
+                        <button id="muteBtn" class="btn-ctrl" title="Mute / Unmute" style="color:var(--text-muted); min-width:32px; min-height:32px; border-radius:6px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; cursor:pointer; transition: color 0.15s, background 0.15s; border:none;">
+                            <svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                            </svg>
+                        </button>
+                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.75">
+                        <span id="volumeVal" style="font-size:0.62rem; font-family:monospace; color:var(--text-muted); width:28px; text-align:right;">75%</span>
+                        
+                        <button id="normToggleBtn" title="Volume Normalization (AGC)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc; font-size: 0.6rem; font-family: monospace; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-left: 4px;">NORM</button>
+                    </div>
+                </div>
             </main>
 
             <aside class="glass-panel catalog-panel">
