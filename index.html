@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, hight=device-hight, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AURA RADIO // Global Online Player</title>
+    <title>AURA RADIO // Global Online Radio</title>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -1432,7 +1432,11 @@
                     if (spin) spin.style.display = 'inline';
 
                     const server = RADIO_SERVERS[currentServerIdx];
-                    let url = `${server}/json/stations/search?limit=60&order=clickcount&reverse=true&hidebroken=true`;
+                    let url = `${server}/json/stations/search?order=clickcount&reverse=true&hidebroken=true`;
+                    if (!hasSearchQuery && activeGenre === 'All' && activeCountry === 'All') {
+                        url += '&limit=60';
+                    }
+
 
                     const hasSearchQuery = searchQuery.trim().length > 0;
                     if (hasSearchQuery) url += `&name=${encodeURIComponent(searchQuery.trim())}`;
