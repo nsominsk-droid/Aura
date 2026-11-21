@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, hight=device-hight, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AURA RADIO // Global Online Radio</title>
     <style>
         *, *::before, *::after {
@@ -27,6 +27,9 @@
             --accent-purple: #a855f7;
             --accent-cyan: #06b6d4;
             --accent-emerald: #10b981;
+            --status-green: #22c55e;
+            --status-yellow: #eab308;
+            --status-red: #ef4444;
         }
 
         html, body {
@@ -94,82 +97,105 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.4rem;
-            flex-wrap: wrap;
+            gap: 0.5rem;
             flex-shrink: 0;
             position: relative;
             z-index: 50;
             width: 100%;
         }
-        @media (max-width: 480px) {
-            header {
-                padding: 0.4rem 0.5rem;
-                gap: 0.3rem;
-            }
-            .brand-title h1 {
-                font-size: 0.88rem;
-            }
-            .brand-badge {
-                display: none;
-            }
-            .status-badge {
-                max-width: 80px;
-                font-size: 0.55rem;
-            }
-            .btn-action {
-                padding: 0.3rem 0.5rem;
-                font-size: 0.65rem;
-                height: 30px;
-                min-height: 30px;
-            }
+
+        /* Левая часть шапки: обложка + название + лампочка статуса */
+        .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-width: 0;
+            flex: 1;
+        }
+        .cover-frame {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            position: relative;
+            border-radius: 0.6rem;
+            overflow: hidden;
+            background: #030712;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .cover-canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+        .cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .cover-img.loaded {
+            opacity: 1;
+        }
+        .station-meta {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .station-title-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            min-width: 0;
+        }
+        .station-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .station-description {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .brand-logo-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            flex-shrink: 0;
-        }
-        .brand-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 0.5rem;
-            background: linear-gradient(135deg, var(--brand-primary), var(--accent-purple));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px var(--brand-glow);
-        }
-        .brand-title h1 {
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-        .brand-badge {
-            font-size: 0.55rem;
-            font-family: monospace;
-            padding: 1px 5px;
-            border-radius: 4px;
-            background: rgba(99, 102, 241, 0.15);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            color: #a5b4fc;
-        }
-        
-        .ping-dot {
-            width: 6px;
-            height: 6px;
+        /* Лампочка статуса */
+        .status-lamp {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: var(--text-dim);
             flex-shrink: 0;
+            background: var(--text-dim);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .status-lamp.green {
+            background: var(--status-green);
+            box-shadow: 0 0 8px var(--status-green);
+        }
+        .status-lamp.yellow {
+            background: var(--status-yellow);
+            box-shadow: 0 0 8px var(--status-yellow);
+        }
+        .status-lamp.red {
+            background: var(--status-red);
+            box-shadow: 0 0 8px var(--status-red);
         }
 
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 0.35rem;
+            gap: 0.4rem;
             flex-shrink: 0;
             margin-left: auto;
         }
@@ -193,92 +219,37 @@
         .btn-action:hover {
             background: rgba(51, 65, 85, 0.9);
         }
-
-        .main-layout {
-            flex: 1;
-            min-height: 0;
+        .btn-play-master {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-primary), var(--accent-purple));
+            color: #fff;
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px var(--brand-glow);
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
         }
-
-        @media (min-width: 900px) {
-            .main-layout {
-                display: grid;
-                grid-template-columns: 380px 1fr;
-            }
-        }
-
-        .player-card {
-            display: flex;
-            flex-direction: column;
-            padding: 0.8rem;
-            gap: 0.6rem;
-            position: relative;
-            min-height: 0;
-            overflow: hidden;
-            flex-shrink: 0;
-            justify-content: space-between;
-        }
-
-        .cover-frame-wrapper {
-            width: 100%;
-            max-width: 210px;
-            margin: 0.4rem auto;
-            position: relative;
-            flex-shrink: 0;
-        }
-        .cover-frame {
-            aspect-ratio: 1 / 1;
-            width: 100%;
-            position: relative;
-            border-radius: 0.85rem;
-            overflow: hidden;
-            background: #030712;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
-        }
-        .cover-canvas {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-        }
-        .cover-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            inset: 0;
-            z-index: 10;
-            opacity: 0;
-            transition: opacity 0.25s ease;
-        }
-        .cover-img.loaded {
-            opacity: 1;
+        .btn-play-master:hover {
+            transform: scale(1.06);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.6);
         }
 
         .btn-heart-bookmark {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            z-index: 50;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
             border-radius: 50%;
-            background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            color: rgba(255, 255, 255, 0.8);
-            display: flex !important;
+            background: rgba(7, 10, 18, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
             transition: transform 0.15s, background 0.15s, color 0.15s;
         }
         .btn-heart-bookmark:hover {
@@ -288,39 +259,13 @@
             background: rgba(236, 72, 153, 0.95);
             border-color: rgba(255, 255, 255, 0.5);
             color: #ffffff;
-            box-shadow: 0 0 12px rgba(236, 72, 153, 0.6);
-        }
-        .btn-heart-bookmark.not-favorite {
-            background: rgba(7, 10, 18, 0.75);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
         }
         .btn-heart-bookmark.disabled {
             opacity: 0.3;
             pointer-events: none;
         }
 
-        .station-meta {
-            width: 100%;
-            text-align: center;
-            padding: 0 0.25rem;
-            flex-shrink: 0;
-        }
-        .station-title-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.35rem;
-            width: 100%;
-        }
-        .station-title {
-            font-size: clamp(0.9rem, 2vw, 1.1rem);
-            font-weight: 700;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
         .btn-info-icon {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -345,72 +290,27 @@
             pointer-events: none;
         }
 
-        .track-sub-title {
-            font-size: 0.7rem;
-            font-family: monospace;
-            color: #a5b4fc;
-            margin-top: 0.15rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .station-description {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            margin-top: 0.15rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        @media (max-width: 480px) {
+            header {
+                padding: 0.4rem 0.5rem;
+            }
+            .station-title {
+                font-size: 0.82rem;
+            }
+            .btn-action {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.65rem;
+                height: 30px;
+                min-height: 30px;
+            }
         }
 
-        .controls-wrapper {
-            width: 100%;
+        .main-layout {
+            flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-            flex-shrink: 0;
-            margin-top: auto;
-        }
-        .controls-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-        .btn-play-master {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--brand-primary), var(--accent-purple));
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 20px var(--brand-glow);
-            border: none;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .btn-play-master:hover {
-            transform: scale(1.06);
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6);
-        }
-
-        .volume-bar {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(15, 23, 42, 0.7);
-            padding: 0.3rem 0.6rem;
-            border-radius: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .volume-slider {
-            flex: 1;
-            accent-color: var(--brand-primary);
-            cursor: pointer;
-            height: 4px;
+            overflow: hidden;
         }
 
         .catalog-panel {
@@ -563,10 +463,16 @@
             flex-shrink: 0;
             position: relative;
         }
+        /* Картинка лежит поверх буквы и невидима, пока не загрузится:
+           так никогда не мелькает значок «битой» картинки */
         .station-avatar-img {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
         .station-avatar-fallback {
             width: 100%;
@@ -605,6 +511,8 @@
             width: 90%;
             position: relative;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            max-height: 90dvh;
+            overflow-y: auto;
         }
         .modal-close {
             position: absolute;
@@ -673,6 +581,33 @@
             border-radius: 0.6rem;
         }
 
+        .info-cover {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 0.9rem;
+            position: relative;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+        }
+        .info-cover canvas,
+        .info-cover img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .info-cover img {
+            object-fit: contain;
+            background: #0b1020;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .info-cover img.loaded {
+            opacity: 1;
+        }
+
         .info-detail-row {
             display: flex;
             justify-content: space-between;
@@ -709,70 +644,6 @@
             padding: 2px 6px;
             border-radius: 4px;
         }
-
-        @media (max-width: 899px) {
-            .cover-frame-wrapper {
-                max-width: 110px;
-                margin: 0.15rem auto;
-            }
-            .player-card {
-                order: 1;
-                padding: 0.5rem;
-                gap: 0.25rem;
-                max-height: 44dvh;
-                aspect-ratio: 1/1;
-            }
-            .catalog-panel {
-                order: 2;
-            }
-            .station-meta {
-                padding: 0;
-            }
-            .controls-wrapper {
-                margin-top: 0.2rem;
-                gap: 0.3rem;
-            }
-            .btn-play-master {
-                width: 48px;
-                height: 48px;
-            }
-        }
-
-        @media (max-height: 500px) and (orientation: landscape) {
-            html, body {
-                height: 100%;
-                overflow: auto;
-            }
-            .app-shell {
-                height: auto;
-                min-height: 100vh;
-                overflow: visible;
-            }
-            .main-layout {
-                display: grid;
-                grid-template-columns: 320px 1fr;
-                gap: 0.5rem;
-                overflow: visible;
-            }
-            .player-card {
-                max-height: none;
-                order: 1;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-            }
-            .catalog-panel {
-                order: 2;
-                max-height: none;
-            }
-            .cover-frame-wrapper {
-                max-width: 100px;
-                margin: 0.2rem auto;
-            }
-            .station-meta, .controls-wrapper {
-                width: 100%;
-            }
-        }
     </style>
 </head>
 <body>
@@ -787,48 +658,14 @@
     <div class="app-shell">
 
         <header class="glass-panel">
-            <div class="brand-logo-group">
-                <div class="brand-icon">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff">
-                        <path d="M3.24 6.15C2.51 6.43 2 7.15 2 8v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2H8.3l7.43-3.71c.41-.21.57-.71.36-1.12-.21-.41-.71-.57-1.12-.36L5.3 7.68c-.76.38-1.35.97-1.76 1.72L3.24 6.15zM4 20V8h16v12H4zm8-9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-                    </svg>
+            <div class="now-playing">
+                <div class="cover-frame">
+                    <canvas id="coverCanvas" width="300" height="300" class="cover-canvas"></canvas>
+                    <img id="stationLogoImg" alt="" class="cover-img">
                 </div>
-                <div class="brand-title">
-                    <h1>AURA <span class="brand-badge">GLOBAL RADIO</span></h1>
-                </div>
-            </div>
-
-            <div class="header-actions">
-                <button id="sleepTimerBtn" class="btn-action" title="Sleep Timer">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc"><path d="M12.3 2c.43 0 .74.37.7.8-.44 4.5 3 8.35 7.5 8.35.43 0 .8.31.8.74 0 5.14-4.16 9.31-9.3 9.31-5.14 0-9.3-4.17-9.3-9.31 0-4.8 3.63-8.76 8.33-9.25.09-.01.18-.04.27-.04z"/></svg>
-                    <span id="sleepTimerLabel">Sleep</span>
-                </button>
-                <button id="masterPlayBtn" class="btn-play-master" title="Play / Pause">
-                            <svg id="masterPlayIcon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                </button>
-            </div>
-       
-        </header>
-
-        <div class="main-layout">
-
-            <main class="glass-panel player-card">
-
-                <div class="cover-frame-wrapper">
-                    <div class="cover-frame">
-                        <canvas id="coverCanvas" width="300" height="300" class="cover-canvas"></canvas>
-                        <img id="stationLogoImg" src="" alt="Station Cover" class="cover-img">
-
-                        <button id="heartBookmarkBtn" class="btn-heart-bookmark not-favorite disabled" title="Bookmark Station">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
                 <div class="station-meta">
                     <div class="station-title-row">
+                        <span id="statusLamp" class="status-lamp" title="Status"></span>
                         <h2 id="activeStationTitle" class="station-title">AURA RADIO</h2>
                         <button id="stationInfoBtn" class="btn-info-icon disabled" title="Station Info">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -838,28 +675,25 @@
                     </div>
                     <p id="activeStationDesc" class="station-description">Select a station from list</p>
                 </div>
+                <button id="heartBookmarkBtn" class="btn-heart-bookmark disabled" title="Bookmark Station">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
+            </div>
 
-                <div class="controls-wrapper">
-                    <div class="controls-row">
-                        <button id="masterPlayBtn" class="btn-play-master" title="Play / Pause">
-                            <svg id="masterPlayIcon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                        </button>
-                    </div>
+            <div class="header-actions">
+                <button id="sleepTimerBtn" class="btn-action" title="Sleep Timer">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc"><path d="M12.3 2c.43 0 .74.37.7.8-.44 4.5 3 8.35 7.5 8.35.43 0 .8.31.8.74 0 5.14-4.16 9.31-9.3 9.31-5.14 0-9.3-4.17-9.3-9.31 0-4.8 3.63-8.76 8.33-9.25.09-.01.18-.04.27-.04z"/></svg>
+                    <span id="sleepTimerLabel">Sleep</span>
+                </button>
+                <button id="masterPlayBtn" class="btn-play-master" title="Play / Pause">
+                    <svg id="masterPlayIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            </div>
+        </header>
 
-                    <div class="volume-bar">
-                        <button id="muteBtn" class="btn-ctrl" title="Mute / Unmute" style="color:var(--text-muted); min-width:32px; min-height:32px; border-radius:6px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; cursor:pointer; transition: color 0.15s, background 0.15s; border:none;">
-                            <svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-                            </svg>
-                        </button>
-                        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.75">
-                        <span id="volumeVal" style="font-size:0.62rem; font-family:monospace; color:var(--text-muted); width:28px; text-align:right;">75%</span>
-                        
-                        <button id="normToggleBtn" title="Volume Normalization (AGC)" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc; font-size: 0.6rem; font-family: monospace; padding: 2px 6px; border-radius: 4px; cursor: pointer; margin-left: 4px;">NORM</button>
-                    </div>
-                </div>
-            </main>
-
+        <div class="main-layout">
             <aside class="glass-panel catalog-panel">
 
                 <div class="tab-switch-bar">
@@ -903,25 +737,25 @@
                     <div class="select-group">
                         <div class="filter-row-inline">
                             <select id="genreSelect" class="custom-select">
-                            <option value="All">All Genres</option>
-                            <option value="electronic">Electronic & Club</option>
-                            <option value="bass">Bass, DnB & Breaks</option>
-                            <option value="chillout">Chill & Ambient</option>
-                            <option value="synthwave">Synthwave & Retro</option>
-                            <option value="rock">Rock & Metal</option>
-                            <option value="pop">Pop & Commercial</option>
-                            <option value="jazz">Jazz, Blues & Soul</option>
-                            <option value="classical">Classical & Acoustic</option>
-                            <option value="latin">Latin, Reggae & World</option>
-                            <option value="hiphop">Hip-Hop & R&B</option>
-                            <option value="talk">Talk & News</option>
-                            <option value="country">Country & Folk</option>
-                        </select>
-                        <button id="genreInfoBtn" class="btn-info-icon" title="Genre Guide" style="width:28px; height:28px; min-width:28px; font-size:11px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                            </svg>
-                        </button>
+                                <option value="All">All Genres</option>
+                                <option value="electronic">Electronic &amp; Club</option>
+                                <option value="bass">Bass, DnB &amp; Breaks</option>
+                                <option value="chillout">Chill &amp; Ambient</option>
+                                <option value="synthwave">Synthwave &amp; Retro</option>
+                                <option value="rock">Rock &amp; Metal</option>
+                                <option value="pop">Pop &amp; Commercial</option>
+                                <option value="jazz">Jazz, Blues &amp; Soul</option>
+                                <option value="classical">Classical &amp; Acoustic</option>
+                                <option value="latin">Latin, Reggae &amp; World</option>
+                                <option value="hiphop">Hip-Hop &amp; R&amp;B</option>
+                                <option value="talk">Talk &amp; News</option>
+                                <option value="country">Country &amp; Folk</option>
+                            </select>
+                            <button id="genreInfoBtn" class="btn-info-icon" title="Genre Guide" style="width:28px; height:28px; min-width:28px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -975,51 +809,51 @@
 
             <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem; padding-right:0.2rem;">
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">⚡ Electronic & Club</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">⚡ Electronic &amp; Club</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">electronic, edm, techno, house, deep house, tech house, trance, electro, club</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🥁 Bass, DnB & Breaks</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🥁 Bass, DnB &amp; Breaks</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">dnb, drum and bass, jungle, neurofunk, liquid funk, dubstep, bass, breakbeat, uk garage</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌿 Chill & Ambient</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌿 Chill &amp; Ambient</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">chillout, ambient, lounge, downtempo, trip hop, meditation, relax, spa, sleep, space</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌆 Synthwave & Retro</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌆 Synthwave &amp; Retro</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">synthwave, vaporwave, retrowave, darksynth, cyberpunk, 80s, disco, futuresynth, outrun</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎸 Rock & Metal</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎸 Rock &amp; Metal</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">rock, alternative, indie, metal, heavy metal, hard rock, punk, grunge, classic rock, post-rock</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">✨ Pop & Commercial</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">✨ Pop &amp; Commercial</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">pop, top40, commercial, charts, hits, dance-pop, mainstream, adult contemporary</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎷 Jazz, Blues & Soul</div>
-                    <div style="font-size:0.62rem; color:var(--text-muted);">jazz, blues, soul, funk, swing, bossa nova, smooth jazz, rnb, r&b</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎷 Jazz, Blues &amp; Soul</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">jazz, blues, soul, funk, swing, bossa nova, smooth jazz, rnb, r&amp;b</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎻 Classical & Acoustic</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎻 Classical &amp; Acoustic</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">classical, piano, orchestra, acoustic, folk, instrumental, opera, celtic, chamber</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌍 Latin, Reggae & World</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🌍 Latin, Reggae &amp; World</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">latin, salsa, reggaeton, reggae, dancehall, afrobeat, world, flamenco, ska</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎤 Hip-Hop & R&B</div>
-                    <div style="font-size:0.62rem; color:var(--text-muted);">hip hop, rap, r&b, urban, trap, old school hip hop</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎤 Hip-Hop &amp; R&amp;B</div>
+                    <div style="font-size:0.62rem; color:var(--text-muted);">hip hop, rap, r&amp;b, urban, trap, old school hip hop</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">📻 Talk & News</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">📻 Talk &amp; News</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">news, talk, podcast, sports, interview, weather, public radio, dialogue</div>
                 </div>
                 <div class="glass-card" style="padding:0.5rem;">
-                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎄 Country & Folk</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:#a5b4fc; margin-bottom:2px;">🎄 Country &amp; Folk</div>
                     <div style="font-size:0.62rem; color:var(--text-muted);">country, americana, bluegrass, folk rock, traditional</div>
                 </div>
             </div>
@@ -1031,6 +865,10 @@
     <div id="infoModal" class="modal-backdrop">
         <div class="modal-box">
             <button id="closeInfoModal" class="modal-close">✕</button>
+            <div class="info-cover">
+                <canvas id="infoCoverCanvas" width="400" height="400"></canvas>
+                <img id="infoCoverImg" alt="">
+            </div>
             <h3 id="modalInfoTitle" style="font-size:0.95rem; font-weight:700; padding-right:1rem; word-break:break-word;">Station Info</h3>
             <p style="font-size:0.65rem; color:var(--text-muted); margin-top:0.1rem; margin-bottom:0.75rem;">Detailed station info</p>
 
@@ -1066,173 +904,26 @@
                 ];
                 let currentServerIdx = 0;
 
-                const CURATED_STATIONS = [
-                    {
-                        id: 'somafm-groovesalad',
-                        name: 'SomaFM Groove Salad',
-                        genre: 'LO-FI',
-                        tags: 'lo-fi, chillout, ambient, downtempo',
-                        country: 'United States',
-                        countrycode: 'US',
-                        url: 'https://ice1.somafm.com/groovesalad-128-mp3',
-                        favicon: 'https://somafm.com/img/groovesalad-120.png',
-                        bitrate: 128,
-                        codec: 'MP3',
-                        location: 'San Francisco, USA',
-                        description: 'Chilled lo-fi downtempo grooves.'
-                    },
-                    {
-                        id: 'nightwave-plaza',
-                        name: 'Nightwave Plaza',
-                        genre: 'SYNTHWAVE',
-                        tags: 'synthwave, vaporwave, electronic',
-                        country: 'Worldwide',
-                        countrycode: 'WW',
-                        url: 'https://stream.plaza.one/mp3',
-                        favicon: 'https://plaza.one/img/logo.png',
-                        bitrate: 128,
-                        codec: 'MP3',
-                        location: 'Worldwide',
-                        description: '24/7 Vaporwave & Synthwave radio.'
-                    },
-                    {
-                        id: 'radio-swiss-jazz',
-                        name: 'Radio Swiss Jazz',
-                        genre: 'JAZZ',
-                        tags: 'jazz, swing, blues',
-                        country: 'Switzerland',
-                        countrycode: 'CH',
-                        url: 'https://stream.srg-ssr.ch/m/rsj/mp3_128',
-                        favicon: '',
-                        bitrate: 128,
-                        codec: 'MP3',
-                        location: 'Basel, Switzerland',
-                        description: 'Smooth jazz, swing and soulful blues.'
-                    },
-                    {
-                        id: 'somafm-deepspace',
-                        name: 'SomaFM Deep Space One',
-                        genre: 'AMBIENT',
-                        tags: 'ambient, space, chillout',
-                        country: 'United States',
-                        countrycode: 'US',
-                        url: 'https://ice1.somafm.com/deepspaceone-128-mp3',
-                        favicon: 'https://somafm.com/img/deepspaceone-120.png',
-                        bitrate: 128,
-                        codec: 'MP3',
-                        location: 'San Francisco, USA',
-                        description: 'Deep space ambient music.'
-                    },
-                    {
-                        id: 'defcon-radio',
-                        name: 'DEF CON Radio',
-                        genre: 'ELECTRONIC',
-                        tags: 'electronic, techno, ambient, chillout',
-                        country: 'United States',
-                        countrycode: 'US',
-                        url: 'https://ice1.somafm.com/defcon-128-mp3',
-                        favicon: 'https://somafm.com/img/defcon120.png',
-                        bitrate: 128,
-                        codec: 'MP3',
-                        location: 'Las Vegas, USA',
-                        description: 'Music for coding and focus.'
-                    },
-                    {
-                        id: 'somafm-indiepop',
-                        name: 'SomaFM Indie Pop',
-                        genre: 'ROCK',
-                        tags: 'rock, indie, pop',
-                        country: 'United States',
-                        countrycode: 'US',
-                        url: 'https://ice1.somafm.com/indiepop-128-mp3',
-                        favicon: '',
-                        bitrate: 128,
-                        codec: 'MP3',
-                        location: 'San Francisco, USA',
-                        description: 'Classic and modern indie rock.'
-                    }
-                ];
 
                 let fetchedStations = [];
+                let loadFailed = false;
+                let isLoadingList = false;
+                let fetchSeq = 0;
                 let activeStation = null;
                 let isPlaying = false;
                 let activeCountry = 'All';
                 let activeGenre = 'All';
                 let searchQuery = '';
-                
+
                 let favoritesMap = new Map();
                 let activeTab = 'all';
                 let sleepTimerId = null;
                 let sleepTargetEndTime = 0;
 
-                // Web Audio API Normalization setup
-                let audioCtx = null;
-                let sourceNode = null;
-                let compressorNode = null;
-                let isNormEnabled = false;
-
-                try {
-                    const savedNorm = localStorage.getItem('aura_norm_enabled');
-                    if (savedNorm !== null) isNormEnabled = JSON.parse(savedNorm);
-                } catch(e) {}
-
-                const normBtn = document.getElementById('normToggleBtn');
-                function updateNormBtnUI() {
-                    if (isNormEnabled) {
-                        normBtn.style.background = 'rgba(99, 102, 241, 0.35)';
-                        normBtn.style.borderColor = 'var(--brand-primary)';
-                        normBtn.style.color = '#fff';
-                        normBtn.style.boxShadow = '0 0 10px rgba(99, 102, 241, 0.4)';
-                    } else {
-                        normBtn.style.background = 'rgba(99, 102, 241, 0.15)';
-                        normBtn.style.borderColor = 'rgba(99, 102, 241, 0.3)';
-                        normBtn.style.color = '#a5b4fc';
-                        normBtn.style.boxShadow = 'none';
-                    }
-                }
-                updateNormBtnUI();
-
-                normBtn.addEventListener('click', () => {
-                    isNormEnabled = !isNormEnabled;
-                    try { localStorage.setItem('aura_norm_enabled', JSON.stringify(isNormEnabled)); } catch(e) {}
-                    updateNormBtnUI();
-                    setupAudioContext();
-                });
+                // Адреса логотипов, которые не загрузились: повторно их не запрашиваем
+                const badLogos = new Set();
 
                 const audioEl = document.getElementById('radioAudio');
-                audioEl.crossOrigin = "anonymous";
-
-                function setupAudioContext() {
-                    if (!audioCtx) {
-                        const AudioContext = window.AudioContext || window.webkitAudioContext;
-                        if (AudioContext) {
-                            audioCtx = new AudioContext();
-                        }
-                    }
-                    if (!audioCtx) return;
-
-                    if (audioCtx.state === 'suspended') {
-                        audioCtx.resume();
-                    }
-
-                    if (!sourceNode) {
-                        try {
-                            sourceNode = audioCtx.createMediaElementSource(audioEl);
-                            compressorNode = audioCtx.createDynamicsCompressor();
-                            // Professional studio compressor settings for radio loudness and clarity
-                            compressorNode.threshold.setValueAtTime(-24, audioCtx.currentTime);
-                            compressorNode.knee.setValueAtTime(12, audioCtx.currentTime);
-                            compressorNode.ratio.setValueAtTime(8, audioCtx.currentTime);
-                            compressorNode.attack.setValueAtTime(0.003, audioCtx.currentTime);
-                            compressorNode.release.setValueAtTime(0.250, audioCtx.currentTime);
-
-                            sourceNode.connect(compressorNode);
-                            compressorNode.connect(audioCtx.destination);
-                        } catch (e) {
-                            console.log("Web Audio routing note:", e);
-                        }
-                    }
-                }
 
                 try {
                     const savedObjects = localStorage.getItem('aura_fav_objects');
@@ -1249,132 +940,225 @@
                     } catch(e) {}
                 }
 
+                function updateFavCount() {
+                    document.getElementById('favTabCount').innerText = favoritesMap.size;
+                }
+
+                // ===== Состояние потока и лампочка =====
+                // idle (серая) | loading (жёлтая) | playing (зелёная) | error (красная)
+                const statusLamp = document.getElementById('statusLamp');
+                const LAMP_CLASS = { loading: 'yellow', playing: 'green', error: 'red' };
+                const LOAD_TIMEOUT_MS = 15000;
+                let streamState = 'idle';
+                let playToken = 0;
+                let loadTimer = null;
+
+                function setStatus(state) {
+                    streamState = state;
+                    statusLamp.className = 'status-lamp' + (LAMP_CLASS[state] ? ' ' + LAMP_CLASS[state] : '');
+                }
+
+                // Если поток не начал играть за 15 секунд, считаем его нерабочим
+                function startLoadWatch() {
+                    clearTimeout(loadTimer);
+                    loadTimer = setTimeout(() => {
+                        if (streamState === 'loading') failStream();
+                    }, LOAD_TIMEOUT_MS);
+                }
+
+                function failStream() {
+                    clearTimeout(loadTimer);
+                    isPlaying = false;
+                    setStatus('error');
+                    updatePlayStateUI();
+                }
+
                 audioEl.addEventListener('waiting', () => {
-                    if (isPlaying) updateStatus("BUFFERING...", "var(--accent-pink)");
+                    if (isPlaying && streamState !== 'error') {
+                        setStatus('loading');
+                        startLoadWatch();
+                    }
                 });
-
                 audioEl.addEventListener('playing', () => {
-                    updateStatus("LIVE STREAM", "var(--accent-emerald)");
+                    clearTimeout(loadTimer);
+                    isPlaying = true;
+                    setStatus('playing');
+                    updatePlayStateUI();
                 });
-
-                audioEl.addEventListener('stalled', () => {
-                    if (isPlaying) {
-                        updateStatus("RECONNECTING...", "var(--accent-pink)");
-                        audioEl.load();
-                        audioEl.play().catch(() => {});
-                    }
+                audioEl.addEventListener('pause', () => {
+                    // После ошибки браузер может прислать pause: красный цвет не трогаем
+                    if (streamState === 'error') return;
+                    if (!isPlaying) setStatus('idle');
                 });
-
                 audioEl.addEventListener('error', () => {
-                    if (isPlaying) {
-                        isPlaying = false;
-                        updatePlayStateUI();
-                        updateStatus("ERROR", "red");
-                    }
+                    if (!activeStation) return;
+                    failStream();
                 });
 
-                function togglePlay() {
-                    setupAudioContext();
-                    if (!activeStation) {
-                        const pool = activeTab === 'fav' 
-                            ? Array.from(favoritesMap.values())
-                            : (fetchedStations.length > 0 ? fetchedStations : filterCuratedByGenre());
-                        if (pool.length > 0) {
-                            selectStation(pool[0]);
+                function handlePlayError(token) {
+                    return (err) => {
+                        if (token !== playToken) return; // запрос уже устарел
+                        if (err && err.name === 'AbortError') return; // его перебил новый запрос
+                        if (err && err.name === 'NotAllowedError') {
+                            // браузер не разрешил автозапуск: это не ошибка станции
+                            clearTimeout(loadTimer);
+                            isPlaying = false;
+                            setStatus('idle');
+                            updatePlayStateUI();
                             return;
                         }
+                        failStream();
+                    };
+                }
+
+                function startPlayback() {
+                    const token = ++playToken;
+                    isPlaying = true;
+                    setStatus('loading');
+                    startLoadWatch();
+                    audioEl.src = activeStation.url;
+                    updatePlayStateUI();
+                    audioEl.play().catch(handlePlayError(token));
+                }
+
+                function togglePlay() {
+                    if (!activeStation) {
+                        const pool = activeTab === 'fav'
+                            ? Array.from(favoritesMap.values())
+                            : fetchedStations;
+                        if (pool.length > 0) {
+                            selectStation(pool[0]);
+                        }
+                        return;
                     }
 
                     if (isPlaying) {
                         audioEl.pause();
                         isPlaying = false;
+                        clearTimeout(loadTimer);
+                        setStatus('idle');
                         updatePlayStateUI();
-                        
                     } else {
-                        if (!audioEl.src || audioEl.src !== activeStation.url) {
-                            audioEl.src = activeStation.url;
-                        }
-                        
-                        audioEl.play().then(() => {
-                            isPlaying = true;
-                            updatePlayStateUI();
-                            
-                        }).catch(err => {
-                            isPlaying = false;
-                            updatePlayStateUI();
-                            
-                        });
+                        startPlayback();
                     }
                 }
 
                 function updatePlayStateUI() {
                     const icon = document.getElementById('masterPlayIcon');
                     icon.innerHTML = isPlaying ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
-                    renderStationsList();
+                    markActiveStation();
+                }
+
+                // Подсвечивает активную станцию, не перерисовывая весь список
+                function markActiveStation() {
+                    document.querySelectorAll('#stationsList .station-item').forEach(el => {
+                        el.classList.toggle('active-station', !!activeStation && el.dataset.id === activeStation.id);
+                    });
                 }
 
                 function selectStation(st) {
-                    setupAudioContext();
                     activeStation = st;
-                    audioEl.src = activeStation.url;
                     updatePlayerUI();
-                    
-                    audioEl.play().then(() => {
-                        isPlaying = true;
-                        updatePlayStateUI();
-                        
-                    }).catch(err => {
-                        isPlaying = false;
-                        updatePlayStateUI();
-                        
-                    });
+                    startPlayback();
                 }
 
                 function updatePlayerUI() {
                     const heartBtn = document.getElementById('heartBookmarkBtn');
                     const infoBtn = document.getElementById('stationInfoBtn');
+                    const imgEl = document.getElementById('stationLogoImg');
 
                     if (!activeStation) {
                         document.getElementById('activeStationTitle').innerText = 'AURA RADIO';
-                        document.getElementById('activeTrackTitle').innerText = 'DISCOVER GLOBAL RADIO';
-                        document.getElementById('activeStationDesc').innerHTML = 'Select a station from list or Play Random';
-                        heartBtn.className = "btn-heart-bookmark not-favorite disabled";
-                        infoBtn.className = "btn-info-icon disabled";
+                        document.getElementById('activeStationDesc').innerText = 'Select a station from list';
+                        heartBtn.className = 'btn-heart-bookmark not-favorite disabled';
+                        infoBtn.className = 'btn-info-icon disabled';
+                        imgEl.classList.remove('loaded');
+                        imgEl.removeAttribute('src');
                         renderCanvasLogo();
                     } else {
                         document.getElementById('activeStationTitle').innerText = activeStation.name;
-                        document.getElementById('activeTrackTitle').innerText = 'Live Stream Broadcast';
                         document.getElementById('activeStationDesc').innerText = `${activeStation.location || 'Global'} • ${activeStation.description || 'Live stream'}`;
 
-                        infoBtn.className = "btn-info-icon";
+                        infoBtn.className = 'btn-info-icon';
 
                         if (favoritesMap.has(activeStation.id)) {
-                            heartBtn.className = "btn-heart-bookmark is-favorite";
+                            heartBtn.className = 'btn-heart-bookmark is-favorite';
                         } else {
-                            heartBtn.className = "btn-heart-bookmark not-favorite";
+                            heartBtn.className = 'btn-heart-bookmark not-favorite';
                         }
 
-                        const imgEl = document.getElementById('stationLogoImg');
-                        imgEl.classList.remove('loaded');
-                        if (activeStation.favicon && activeStation.favicon.startsWith('http')) {
-                            imgEl.src = activeStation.favicon;
+                        renderCanvasLogo();
+                        const fav = activeStation.favicon;
+                        if (fav && fav.startsWith('http') && !badLogos.has(fav)) {
+                            if (imgEl.getAttribute('src') !== fav) {
+                                imgEl.classList.remove('loaded');
+                                imgEl.src = fav;
+                            }
                         } else {
-                            renderCanvasLogo();
+                            imgEl.classList.remove('loaded');
+                            imgEl.removeAttribute('src');
                         }
                     }
 
-                    renderStationsList();
+                    markActiveStation();
                 }
 
-                const imgEl = document.getElementById('stationLogoImg');
-                imgEl.onload = () => imgEl.classList.add('loaded');
-                imgEl.onerror = () => {
-                    imgEl.classList.remove('loaded');
-                    renderCanvasLogo();
+                const logoImgEl = document.getElementById('stationLogoImg');
+                logoImgEl.onload = () => logoImgEl.classList.add('loaded');
+                logoImgEl.onerror = () => {
+                    const u = logoImgEl.getAttribute('src');
+                    if (u) badLogos.add(u);
+                    logoImgEl.classList.remove('loaded');
                 };
+
+                function nameHash(str) {
+                    let h = 0;
+                    const t = String(str || '');
+                    for (let i = 0; i < t.length; i++) {
+                        h = (h * 31 + t.charCodeAt(i)) | 0;
+                    }
+                    return Math.abs(h);
+                }
+
+                function tileInitials(name) {
+                    const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+                    if (words.length >= 2) return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+                    return (words[0] || 'R').slice(0, 2).toUpperCase();
+                }
+
+                function tileGradientCss(name) {
+                    const hue = nameHash(name) % 360;
+                    return `linear-gradient(135deg, hsl(${hue}, 60%, 32%), hsl(${(hue + 45) % 360}, 65%, 48%))`;
+                }
+
+                // Цветная плитка с двумя буквами: цвет зависит от названия, у станции он всегда один и тот же
+                function drawStationTile(canvas, st) {
+                    const ctx = canvas.getContext('2d');
+                    const w = canvas.width;
+                    const h = canvas.height;
+                    const name = st ? st.name : 'AURA';
+                    const hue = nameHash(name) % 360;
+
+                    const grad = ctx.createLinearGradient(0, 0, w, h);
+                    grad.addColorStop(0, `hsl(${hue}, 60%, 32%)`);
+                    grad.addColorStop(1, `hsl(${(hue + 45) % 360}, 65%, 48%)`);
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `bold ${Math.round(w * 0.36)}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(tileInitials(name), w / 2, h / 2);
+                }
 
                 function renderCanvasLogo() {
                     const canvas = document.getElementById('coverCanvas');
+                    if (activeStation) {
+                        drawStationTile(canvas, activeStation);
+                        return;
+                    }
+
                     const ctx = canvas.getContext('2d');
                     const w = canvas.width = 300;
                     const h = canvas.height = 300;
@@ -1394,15 +1178,14 @@
                     ctx.stroke();
 
                     ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 36px sans-serif';
+                    ctx.font = 'bold 56px sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText('AURA', w/2, h/2 - 10);
 
                     ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                    ctx.font = '600 14px monospace';
-                    const genreText = activeStation ? (activeStation.genre || 'RADIO').toUpperCase() : 'GLOBAL RADIO';
-                    ctx.fillText(genreText, w/2, h/2 + 25);
+                    ctx.font = '600 22px monospace';
+                    ctx.fillText('GLOBAL RADIO', w/2, h/2 + 35);
                 }
 
                 const GENRE_MAPPINGS = {
@@ -1420,99 +1203,110 @@
                     country: ['country', 'americana', 'bluegrass', 'folk rock', 'traditional']
                 };
 
-                function stationMatchesGenre(stationTags, genreKey) {
-                    if (genreKey === 'All') return true;
-                    const tags = stationTags ? stationTags.toLowerCase() : '';
-                    const allowedTags = GENRE_MAPPINGS[genreKey] || [];
-                    return allowedTags.some(t => tags.includes(t));
+                // Перебирает серверы базы по очереди, пока один не ответит
+                async function apiGet(path) {
+                    for (let i = 0; i < RADIO_SERVERS.length; i++) {
+                        const idx = (currentServerIdx + i) % RADIO_SERVERS.length;
+                        try {
+                            const res = await fetch(RADIO_SERVERS[idx] + path, { signal: AbortSignal.timeout(5000) });
+                            if (!res.ok) continue;
+                            const data = await res.json();
+                            currentServerIdx = idx;
+                            return data;
+                        } catch (e) { /* пробуем следующий сервер */ }
+                    }
+                    throw new Error('Offline');
+                }
+
+                function mapApiStation(st) {
+                    const allTagsStr = st.tags ? st.tags.toLowerCase() : '';
+                    const tagList = allTagsStr.split(',').map(t => t.trim()).filter(Boolean);
+                    const displayTag = tagList.length > 0 ? tagList[0].toUpperCase() : 'RADIO';
+
+                    return {
+                        id: st.stationuuid || String(Math.random()),
+                        name: st.name ? st.name.trim() : 'Unknown Station',
+                        genre: displayTag,
+                        tags: allTagsStr,
+                        country: st.country || 'Global',
+                        countrycode: st.countrycode || 'WW',
+                        url: st.url_resolved || st.url,
+                        favicon: st.favicon && st.favicon.startsWith('http') ? st.favicon.trim() : '',
+                        bitrate: st.bitrate || 128,
+                        codec: st.codec || 'MP3',
+                        location: st.country || 'Worldwide',
+                        description: st.tags ? st.tags.split(',').slice(0, 3).map(t => `#${t.trim()}`).join(' • ') : 'Live stream'
+                    };
                 }
 
                 async function fetchGlobalStations() {
+                    const seq = ++fetchSeq;
+                    isLoadingList = true;
                     const spin = document.getElementById('loaderSpin');
                     if (spin) spin.style.display = 'inline';
-
-                    const server = RADIO_SERVERS[currentServerIdx];
-                    let url = `${server}/json/stations/search?order=clickcount&reverse=true&hidebroken=true`;
-                    if (!hasSearchQuery && activeGenre === 'All' && activeCountry === 'All') {
-                        url += '&limit=60';
-                    }
-
+                    if (fetchedStations.length === 0) renderStationsList();
 
                     const hasSearchQuery = searchQuery.trim().length > 0;
-                    if (hasSearchQuery) url += `&name=${encodeURIComponent(searchQuery.trim())}`;
+
+                    let path = `/json/stations/search?order=clickcount&reverse=true&hidebroken=true&is_https=true`;
+                    if (!hasSearchQuery && activeGenre === 'All' && activeCountry === 'All') {
+                        path += '&limit=60';
+                    } else {
+                        path += '&limit=200';
+                    }
+
+                    if (hasSearchQuery) path += `&name=${encodeURIComponent(searchQuery.trim())}`;
                     if (activeGenre !== 'All') {
                         const tagsArr = GENRE_MAPPINGS[activeGenre] || [];
                         if (tagsArr.length > 0) {
-                            url += `&tag=${encodeURIComponent(tagsArr[0])}`;
+                            path += `&tag=${encodeURIComponent(tagsArr[0])}`;
                         }
                     }
-                    if (activeCountry !== 'All') url += `&countrycode=${encodeURIComponent(activeCountry)}`;
+                    if (activeCountry !== 'All') path += `&countrycode=${encodeURIComponent(activeCountry)}`;
 
+                    let result = [];
+                    let failed = false;
                     try {
-                        const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
-                        if (!res.ok) throw new Error("Offline");
-                        const data = await res.json();
-                        
-                        if (Array.isArray(data)) {
-                            let mapped = data.map(st => {
-                                const allTagsStr = st.tags ? st.tags.toLowerCase() : '';
-                                const tagList = allTagsStr.split(',').map(t => t.trim()).filter(Boolean);
-                                let displayTag = tagList.length > 0 ? tagList[0].toUpperCase() : 'RADIO';
-
-                                return {
-                                    id: st.stationuuid || String(Math.random()),
-                                    name: st.name ? st.name.trim() : 'Unknown Station',
-                                    genre: displayTag,
-                                    tags: allTagsStr,
-                                    country: st.country || 'Global',
-                                    countrycode: st.countrycode || 'WW',
-                                    url: st.url_resolved || st.url,
-                                    favicon: st.favicon && st.favicon.startsWith('http') ? st.favicon.trim() : '',
-                                    bitrate: st.bitrate || 128,
-                                    codec: st.codec || 'MP3',
-                                    location: st.country || 'Worldwide',
-                                    description: st.tags ? st.tags.split(',').slice(0, 3).map(t => `#${t.trim()}`).join(' • ') : 'Live stream'
-                                };
-                            });
-
-                            if (activeGenre !== 'All') {
-                                mapped = mapped.filter(st => stationMatchesGenre(st.tags, activeGenre));
-                            }
-
-                            fetchedStations = mapped;
-                        } else {
-                            fetchedStations = hasSearchQuery ? [] : filterCuratedByGenre();
-                        }
-                    } catch(err) {
-                        currentServerIdx = (currentServerIdx + 1) % RADIO_SERVERS.length;
-                        fetchedStations = hasSearchQuery ? [] : filterCuratedByGenre();
-                    } finally {
-                        if (spin) spin.style.display = 'none';
-                        renderStationsList();
+                        const data = await apiGet(path);
+                        if (!Array.isArray(data)) throw new Error('Bad response');
+                        // Отсекаем плейлисты и HLS: обычный тег audio их не играет
+                        result = data.map(mapApiStation).filter(st => st.url && !/\.(m3u8|m3u|pls)(\?|$)/i.test(st.url));
+                    } catch (err) {
+                        failed = true;
                     }
+
+                    // Если пока шёл запрос, начался более новый, этот ответ уже не нужен
+                    if (seq !== fetchSeq) return;
+
+                    isLoadingList = false;
+                    loadFailed = failed;
+                    fetchedStations = result;
+                    if (spin) spin.style.display = 'none';
+                    renderStationsList();
                 }
 
-                function filterCuratedByGenre() {
-                    let pool = CURATED_STATIONS;
-                    if (activeGenre !== 'All') {
-                        pool = pool.filter(s => stationMatchesGenre(s.tags, activeGenre));
-                    }
-                    if (searchQuery.trim().length > 0) {
-                        const q = searchQuery.trim().toLowerCase();
-                        pool = pool.filter(s => s.name.toLowerCase().includes(q) || s.tags.toLowerCase().includes(q));
-                    }
-                    return pool;
+                function escapeHtml(str) {
+                    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
                 }
 
+                // Вызывается из onerror у картинки в списке
+                window.markLogoBad = (img) => {
+                    const u = img.getAttribute('src');
+                    if (u) badLogos.add(u);
+                    img.remove();
+                };
+
+                // Список перерисовывается только когда он реально меняется
+                // (загрузка, поиск, фильтры, вкладки), а не при каждом событии плеера
                 function renderStationsList() {
                     const listEl = document.getElementById('stationsList');
-                    document.getElementById('favTabCount').innerText = favoritesMap.size;
+                    updateFavCount();
 
                     if (activeTab === 'fav') {
                         document.getElementById('filterGroup').style.display = 'none';
                         document.getElementById('searchContainer').style.display = 'none';
                         document.getElementById('listTitleLabel').innerHTML = `FAVORITES (${favoritesMap.size})`;
-                        
+
                         const favList = Array.from(favoritesMap.values());
                         if (favList.length === 0) {
                             listEl.innerHTML = `<div style="text-align:center; padding:1.5rem; font-size:0.75rem; color:var(--text-dim);">No favorite stations yet.</div>`;
@@ -1522,11 +1316,18 @@
                     } else {
                         document.getElementById('filterGroup').style.display = 'grid';
                         document.getElementById('searchContainer').style.display = 'block';
-                        
+
                         const pool = fetchedStations;
                         document.getElementById('listTitleLabel').innerHTML = `TOP ONLINE STATIONS (<span id="stationCount">${pool.length}</span>)`;
                         if (pool.length === 0) {
-                            listEl.innerHTML = `<div style="text-align:center; padding:1.5rem; font-size:0.75rem; color:var(--text-dim);">No stations found.</div>`;
+                            const box = 'text-align:center; padding:1.5rem; font-size:0.75rem; color:var(--text-dim);';
+                            if (isLoadingList) {
+                                listEl.innerHTML = `<div style="${box}">Loading stations…</div>`;
+                            } else if (loadFailed) {
+                                listEl.innerHTML = `<div style="${box}"><div style="margin-bottom:0.7rem;">Couldn't load stations. Check your connection.</div><button class="btn-action" style="margin:0 auto; justify-content:center;" onclick="window.retryFetch()">Retry</button></div>`;
+                            } else {
+                                listEl.innerHTML = `<div style="${box}">No stations found.</div>`;
+                            }
                             return;
                         }
                         listEl.innerHTML = pool.map(s => renderStationItemHTML(s)).join('');
@@ -1535,29 +1336,38 @@
 
                 function renderStationItemHTML(s) {
                     const isActive = activeStation && s.id === activeStation.id;
-                    const hasFavicon = s.favicon && s.favicon.startsWith('http');
-                    const initial = s.name ? s.name.charAt(0).toUpperCase() : 'R';
+                    const hasFavicon = s.favicon && s.favicon.startsWith('http') && !badLogos.has(s.favicon);
+                    const initials = escapeHtml(tileInitials(s.name));
 
+                    // Цветная плитка с буквами есть всегда. Картинка лежит поверх неё, невидима до загрузки,
+                    // а при успешной загрузке прячет плитку. Битая картинка просто удаляется.
                     return `
-                        <div class="glass-card station-item ${isActive ? 'active-station' : ''}" onclick="window.selectStationById('${s.id}')">
-                            <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
+                        <div class="glass-card station-item ${isActive ? 'active-station' : ''}" data-id="${escapeHtml(s.id)}" onclick="window.selectStationById(this.dataset.id)">
+                            <div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden; min-width:0;">
                                 <div class="station-avatar-wrapper">
-                                    ${hasFavicon ? `<img src="${s.favicon}" class="station-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" alt="Logo">` : ''}
-                                    <div class="station-avatar-fallback" style="${hasFavicon ? 'display:none;' : 'display:flex;'}">${initial}</div>
+                                    <div class="station-avatar-fallback" style="background:${tileGradientCss(s.name)};">${initials}</div>
+                                    ${hasFavicon ? `<img src="${escapeHtml(s.favicon)}" class="station-avatar-img" alt="" loading="lazy" onload="this.style.opacity=1; this.previousElementSibling.style.visibility='hidden';" onerror="window.markLogoBad(this)">` : ''}
                                 </div>
                                 <div style="min-width:0;">
-                                    <div style="font-size:0.72rem; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.name}</div>
-                                    <div style="font-size:0.6rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.location}</div>
+                                    <div style="font-size:0.72rem; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.name)}</div>
+                                    <div style="font-size:0.6rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.location)}</div>
                                 </div>
                             </div>
                         </div>
                     `;
                 }
 
+                function findStationById(id) {
+                    return fetchedStations.find(s => s.id === id)
+                        || favoritesMap.get(id)
+                        || (activeStation && activeStation.id === id ? activeStation : null);
+                }
+
                 window.selectStationById = (id) => {
-                    const found = fetchedStations.find(s => s.id === id) || CURATED_STATIONS.find(s => s.id === id) || favoritesMap.get(id);
+                    const found = findStationById(id);
                     if (found) selectStation(found);
                 };
+                window.retryFetch = () => fetchGlobalStations();
 
                 document.getElementById('tabAllBtn').addEventListener('click', () => {
                     activeTab = 'all';
@@ -1583,49 +1393,9 @@
                     }
                     saveFavoritesToStorage();
                     updatePlayerUI();
-                });
-
-                let lastVolumeBeforeMute = 0.75;
-
-                function updateMuteUI(isMuted) {
-                    const muteBtn = document.getElementById('muteBtn');
-                    const muteIcon = document.getElementById('muteIcon');
-                    if (isMuted) {
-                        muteIcon.innerHTML = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C22.33 14.95 23 13.54 23 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
-                        muteBtn.style.color = 'var(--accent-pink)';
-                        muteBtn.style.background = 'rgba(236, 72, 153, 0.15)';
-                    } else {
-                        muteIcon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>';
-                        muteBtn.style.color = 'var(--text-muted)';
-                        muteBtn.style.background = 'rgba(255, 255, 255, 0.04)';
-                    }
-                }
-
-                document.getElementById('volumeSlider').addEventListener('input', (e) => {
-                    const val = parseFloat(e.target.value);
-                    audioEl.volume = val;
-                    document.getElementById('volumeVal').innerText = `${Math.round(val * 100)}%`;
-                    if (val === 0) {
-                        updateMuteUI(true);
-                    } else {
-                        updateMuteUI(false);
-                    }
-                });
-
-                document.getElementById('muteBtn').addEventListener('click', () => {
-                    const slider = document.getElementById('volumeSlider');
-                    if (audioEl.volume > 0) {
-                        lastVolumeBeforeMute = audioEl.volume;
-                        slider.value = 0;
-                        audioEl.volume = 0;
-                        updateMuteUI(true);
-                    } else {
-                        const restoreVal = lastVolumeBeforeMute > 0 ? lastVolumeBeforeMute : 0.75;
-                        slider.value = restoreVal;
-                        audioEl.volume = restoreVal;
-                        updateMuteUI(false);
-                    }
-                    slider.dispatchEvent(new Event('input'));
+                    updateFavCount();
+                    // На вкладке избранного станция должна сразу исчезнуть из списка
+                    if (activeTab === 'fav') renderStationsList();
                 });
 
                 document.getElementById('countrySelect').addEventListener('change', (e) => {
@@ -1655,44 +1425,41 @@
                     fetchGlobalStations();
                 });
 
-                // Drum Picker initialization & logic
+                // Барабан таймера сна: минуты 00, 05, 10 ... 55
                 function initDrumPickers() {
                     const hoursList = document.getElementById('hoursList');
                     const minsList = document.getElementById('minsList');
 
-                    let hHtml = '<li class="picker-item" data-val="0">00h</li>';
-                    for (let i = 1; i <= 12; i++) {
+                    let hHtml = '';
+                    for (let i = 0; i <= 12; i++) {
                         hHtml += `<li class="picker-item" data-val="${i}">${String(i).padStart(2, '0')}h</li>`;
                     }
                     hoursList.innerHTML = hHtml;
 
-                    let mHtml = '<li class="picker-item" data-val="0">00m</li>';
-                    for (let i = 1; i < 60; i += 5) {
+                    let mHtml = '';
+                    for (let i = 0; i < 60; i += 5) {
                         mHtml += `<li class="picker-item" data-val="${i}">${String(i).padStart(2, '0')}m</li>`;
                     }
                     minsList.innerHTML = mHtml;
 
-                    setupPickerScroll('hoursPicker', 'hoursList');
-                    setupPickerScroll('minsPicker', 'minsList');
+                    setupPickerScroll('hoursPicker', 'hoursList', 0);
+                    setupPickerScroll('minsPicker', 'minsList', 6); // 30 минут по умолчанию
                 }
 
-                function setupPickerScroll(containerId, listId) {
+                function setupPickerScroll(containerId, listId, defaultIndex) {
                     const container = document.getElementById(containerId);
                     const list = document.getElementById(listId);
                     const items = list.querySelectorAll('.picker-item');
                     const itemHeight = 40;
 
-                    container.addEventListener('scroll', () => {
-                        const scrollTop = container.scrollTop;
-                        const index = Math.round(scrollTop / itemHeight);
+                    function refreshSelected() {
+                        const index = Math.round(container.scrollTop / itemHeight);
                         items.forEach((item, idx) => {
-                            if (idx === index) {
-                                item.classList.add('selected');
-                            } else {
-                                item.classList.remove('selected');
-                            }
+                            item.classList.toggle('selected', idx === index);
                         });
-                    });
+                    }
+
+                    container.addEventListener('scroll', refreshSelected);
 
                     items.forEach((item, idx) => {
                         item.addEventListener('click', () => {
@@ -1700,21 +1467,25 @@
                         });
                     });
 
-                    // Set default to 30m (index for 30 in 0, 5, 10, 15, 20, 25, 30 is 7)
-                    if (containerId === 'minsList' || containerId === 'minsPicker') {
-                        container.scrollTop = 7 * itemHeight;
-                    } else {
-                        container.scrollTop = 0;
-                    }
-                    container.dispatchEvent(new Event('scroll'));
+                    container._setIndex = (idx) => {
+                        container.scrollTop = idx * itemHeight;
+                        refreshSelected();
+                    };
+                    container._defaultIndex = defaultIndex;
+                }
+
+                function resetPickersToDefault() {
+                    const hc = document.getElementById('hoursPicker');
+                    const mc = document.getElementById('minsPicker');
+                    hc._setIndex(hc._defaultIndex);
+                    mc._setIndex(mc._defaultIndex);
                 }
 
                 function getPickerValue(containerId) {
                     const container = document.getElementById(containerId);
                     const itemHeight = 40;
                     const index = Math.round(container.scrollTop / itemHeight);
-                    const list = container.querySelector('.picker-list');
-                    const items = list.querySelectorAll('.picker-item');
+                    const items = container.querySelectorAll('.picker-item');
                     if (items[index]) {
                         return parseInt(items[index].getAttribute('data-val'), 10) || 0;
                     }
@@ -1723,20 +1494,22 @@
 
                 initDrumPickers();
 
+                function toggleModal(id) {
+                    const m = document.getElementById(id);
+                    const willShow = !m.classList.contains('show');
+                    m.classList.toggle('show');
+                    // барабаны можно выставить только когда окно видимо
+                    if (id === 'sleepModal' && willShow) {
+                        resetPickersToDefault();
+                    }
+                }
+
                 document.getElementById('sleepTimerBtn').addEventListener('click', () => toggleModal('sleepModal'));
                 document.getElementById('closeSleepModal').addEventListener('click', () => toggleModal('sleepModal'));
 
                 window.selectPresetSleep = (mins) => {
-                    const h = Math.floor(mins / 60);
-                    const m = mins % 60;
-                    // scroll pickers
-                    const hContainer = document.getElementById('hoursPicker');
-                    const mContainer = document.getElementById('minsPicker');
-                    hContainer.scrollTop = h * 40;
-                    // find closest multiple of 5 for mins
-                    const mStep = Math.round(m / 5);
-                    mContainer.scrollTop = mStep * 40;
-                    startTimerFromPickers();
+                    setSleepTimerMinutes(mins);
+                    toggleModal('sleepModal');
                 };
 
                 function startTimerFromPickers() {
@@ -1753,7 +1526,7 @@
                 function setSleepTimerMinutes(mins) {
                     if (sleepTimerId) clearInterval(sleepTimerId);
                     sleepTargetEndTime = Date.now() + (mins * 60 * 1000);
-                    
+
                     const btn = document.getElementById('sleepTimerBtn');
                     btn.style.background = 'linear-gradient(135deg, var(--brand-primary), var(--accent-purple))';
                     btn.style.borderColor = 'rgba(255,255,255,0.4)';
@@ -1778,7 +1551,7 @@
                     const mins = Math.floor((totalSecs % 3600) / 60);
                     const secs = totalSecs % 60;
 
-                    const timeStr = hrs > 0 
+                    const timeStr = hrs > 0
                         ? `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`
                         : `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
 
@@ -1802,6 +1575,17 @@
 
                 document.getElementById('stationInfoBtn').addEventListener('click', () => {
                     if (!activeStation) return;
+
+                    // Крупный логотип: сначала цветная плитка, поверх неё картинка, если она загрузится
+                    drawStationTile(document.getElementById('infoCoverCanvas'), activeStation);
+                    const infoLogo = document.getElementById('infoCoverImg');
+                    infoLogo.classList.remove('loaded');
+                    infoLogo.removeAttribute('src');
+                    const infoFav = activeStation.favicon;
+                    if (infoFav && infoFav.startsWith('http') && !badLogos.has(infoFav)) {
+                        infoLogo.src = infoFav;
+                    }
+
                     document.getElementById('modalInfoTitle').innerText = activeStation.name;
                     document.getElementById('infoModalLocation').innerText = activeStation.location || 'Worldwide';
                     document.getElementById('infoModalAudio').innerText = `${activeStation.codec || 'MP3'} / ${activeStation.bitrate || 128} kbps`;
@@ -1810,7 +1594,7 @@
                     const tagsContainer = document.getElementById('infoModalTags');
                     if (activeStation.tags) {
                         const rawTags = activeStation.tags.split(',').map(t => t.trim()).filter(Boolean);
-                        tagsContainer.innerHTML = rawTags.map(t => `<span class="tag-pill">#${t}</span>`).join('');
+                        tagsContainer.innerHTML = rawTags.map(t => `<span class="tag-pill">#${escapeHtml(t)}</span>`).join('');
                     } else {
                         tagsContainer.innerHTML = `<span style="font-size:0.7rem; color:var(--text-dim);">No tags</span>`;
                     }
@@ -1818,27 +1602,34 @@
                     toggleModal('infoModal');
                 });
 
+                const infoCoverImg = document.getElementById('infoCoverImg');
+                infoCoverImg.onload = () => infoCoverImg.classList.add('loaded');
+                infoCoverImg.onerror = () => {
+                    const u = infoCoverImg.getAttribute('src');
+                    if (u) badLogos.add(u);
+                    infoCoverImg.classList.remove('loaded');
+                };
+
                 document.getElementById('closeInfoModal').addEventListener('click', () => toggleModal('infoModal'));
                 document.getElementById('closeInfoModalBtn').addEventListener('click', () => toggleModal('infoModal'));
 
-                function toggleModal(id) {
-                    const m = document.getElementById(id);
-                    m.classList.toggle('show');
-                }
-
-                document.getElementById('genreInfoBtn').addEventListener('click', () => {
-                    toggleModal('genreInfoModal');
-                });
+                document.getElementById('genreInfoBtn').addEventListener('click', () => toggleModal('genreInfoModal'));
                 document.getElementById('closeGenreInfoModal').addEventListener('click', () => toggleModal('genreInfoModal'));
                 document.getElementById('closeGenreInfoModalBtn').addEventListener('click', () => toggleModal('genreInfoModal'));
 
                 fetchGlobalStations();
                 updatePlayerUI();
+                updatePlayStateUI();
+                updateFavCount();
 
             } catch (err) {
-                console.error("Runtime error:", err);
+                console.error('Runtime error:', err);
             }
         });
     </script>
+
+    <!-- Cloudflare Web Analytics -->
+    <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "97bd5247471f4b52aaf9949500ee0b78"}'></script>
+    <!-- End Cloudflare Web Analytics -->
 </body>
 </html>
