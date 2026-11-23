@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AURA RADIO // Global Online Radio</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Настройки подключения. Пока пусто, вход, синхронизация и «Поделиться» просто скрыты.
+        window.AURA_CONFIG = {
+            WORKER_URL: '',        // например https://aura-api.ваш-поддомен.workers.dev
+            BOT_USERNAME: '',      // имя бота без @
+            APP_SHORT_NAME: '',    // короткое имя Mini App из BotFather (если задано)
+            LIMITS_ENABLED: false, // лимиты бесплатного режима, включим вместе с оплатой
+            FREE_FAVORITES_LIMIT: 5,
+            FREE_PLAY_MINUTES: 30
+        };
+    </script>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -92,7 +104,7 @@
             border-color: rgba(99, 102, 241, 0.4);
         }
 
-        header {
+        .app-header, .player-bar {
             padding: 0.5rem 0.75rem;
             display: flex;
             align-items: center;
@@ -291,7 +303,7 @@
         }
 
         @media (max-width: 480px) {
-            header {
+            .app-header, .player-bar {
                 padding: 0.4rem 0.5rem;
             }
             .station-title {
@@ -304,6 +316,43 @@
                 min-height: 30px;
             }
         }
+
+        .player-bar { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)); }
+        body.kb-open .player-bar { display: none; }
+
+        .brand { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+        .brand svg { width: 34px; height: 34px; flex-shrink: 0; }
+        .brand-name { font-size: 0.95rem; font-weight: 800; letter-spacing: 0.18em; color: #fff; }
+        .profile-chip {
+            display: flex; align-items: center; gap: 0.45rem; max-width: 55%;
+            height: 36px; padding: 0 0.7rem 0 0.3rem; border-radius: 999px;
+            background: rgba(7, 10, 18, 0.6); border: 1px solid rgba(255,255,255,0.18);
+            color: #fff; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+        }
+        .profile-chip.guest { padding: 0 0.8rem; }
+        .profile-avatar {
+            width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--brand-primary), var(--accent-purple));
+            font-size: 0.7rem; font-weight: 700; overflow: hidden;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .share-btn {
+            width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%;
+            background: rgba(7, 10, 18, 0.6); border: 1px solid rgba(255,255,255,0.15);
+            color: #a5b4fc; display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .toast {
+            position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%); z-index: 400; max-width: 86%;
+            background: rgba(15, 23, 42, 0.96); border: 1px solid rgba(255,255,255,0.18);
+            color: #fff; font-size: 0.75rem; padding: 0.55rem 0.9rem; border-radius: 0.7rem;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .toast.show { opacity: 1; }
+        .profile-row { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.75rem; padding: 0.35rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .profile-row span:first-child { color: var(--text-muted); }
 
         .main-layout {
             flex: 1;
@@ -657,40 +706,27 @@
 
     <div class="app-shell">
 
-        <header class="glass-panel">
-            <div class="now-playing">
-                <div class="cover-frame">
-                    <canvas id="coverCanvas" width="300" height="300" class="cover-canvas"></canvas>
-                    <img id="stationLogoImg" alt="" class="cover-img">
-                </div>
-                <div class="station-meta">
-                    <div class="station-title-row">
-                        <span id="statusLamp" class="status-lamp" title="Status"></span>
-                        <h2 id="activeStationTitle" class="station-title">AURA RADIO</h2>
-                        <button id="stationInfoBtn" class="btn-info-icon disabled" title="Station Info">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <p id="activeStationDesc" class="station-description">Select a station from list</p>
-                </div>
-                <button id="heartBookmarkBtn" class="btn-heart-bookmark disabled" title="Bookmark Station">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                </button>
+        <header class="glass-panel app-header">
+            <div class="brand">
+                <svg viewBox="0 0 512 512" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="logoBg" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#1e1b4b"/><stop offset="0.55" stop-color="#4338ca"/><stop offset="1" stop-color="#a855f7"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="112" fill="url(#logoBg)"/>
+                    <g fill="none" stroke="#fff" stroke-linecap="round" stroke-width="26" transform="translate(0,30)">
+                        <path d="M309.6 181 A70 70 0 0 1 309.6 271"/><path d="M202.4 181 A70 70 0 0 0 202.4 271"/>
+                        <path d="M347.9 148.9 A120 120 0 0 1 347.9 303.1" opacity="0.7"/><path d="M164.1 148.9 A120 120 0 0 0 164.1 303.1" opacity="0.7"/>
+                    </g>
+                    <circle cx="256" cy="256" r="34" fill="#fff"/>
+                </svg>
+                <span class="brand-name">AURA</span>
             </div>
-
-            <div class="header-actions">
-                <button id="sleepTimerBtn" class="btn-action" title="Sleep Timer">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc"><path d="M12.3 2c.43 0 .74.37.7.8-.44 4.5 3 8.35 7.5 8.35.43 0 .8.31.8.74 0 5.14-4.16 9.31-9.3 9.31-5.14 0-9.3-4.17-9.3-9.31 0-4.8 3.63-8.76 8.33-9.25.09-.01.18-.04.27-.04z"/></svg>
-                    <span id="sleepTimerLabel">Sleep</span>
-                </button>
-                <button id="masterPlayBtn" class="btn-play-master" title="Play / Pause">
-                    <svg id="masterPlayIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                </button>
-            </div>
+            <button id="profileBtn" class="profile-chip guest" title="Profile">
+                <span id="profileAvatar" class="profile-avatar" style="display:none;"></span>
+                <span id="profileName" class="profile-name">Sign in</span>
+            </button>
         </header>
 
         <div class="main-layout">
@@ -769,6 +805,42 @@
                 </div>
             </aside>
         </div>
+
+        <footer class="glass-panel player-bar">
+            <div class="now-playing">
+                <div class="cover-frame">
+                    <canvas id="coverCanvas" width="300" height="300" class="cover-canvas"></canvas>
+                    <img id="stationLogoImg" alt="" class="cover-img">
+                </div>
+                <div class="station-meta">
+                    <div class="station-title-row">
+                        <span id="statusLamp" class="status-lamp" title="Status"></span>
+                        <h2 id="activeStationTitle" class="station-title">AURA RADIO</h2>
+                        <button id="stationInfoBtn" class="btn-info-icon disabled" title="Station Info">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="activeStationDesc" class="station-description">Select a station from list</p>
+                </div>
+                <button id="heartBookmarkBtn" class="btn-heart-bookmark disabled" title="Bookmark Station">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="header-actions">
+                <button id="sleepTimerBtn" class="btn-action" title="Sleep Timer">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#a5b4fc"><path d="M12.3 2c.43 0 .74.37.7.8-.44 4.5 3 8.35 7.5 8.35.43 0 .8.31.8.74 0 5.14-4.16 9.31-9.3 9.31-5.14 0-9.3-4.17-9.3-9.31 0-4.8 3.63-8.76 8.33-9.25.09-.01.18-.04.27-.04z"/></svg>
+                    <span id="sleepTimerLabel">Sleep</span>
+                </button>
+                <button id="masterPlayBtn" class="btn-play-master" title="Play / Pause">
+                    <svg id="masterPlayIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            </div>
+        </footer>
     </div>
 
     <div id="sleepModal" class="modal-backdrop">
@@ -862,6 +934,18 @@
         </div>
     </div>
 
+    <div id="profileModal" class="modal-backdrop">
+        <div class="modal-box">
+            <button id="closeProfileModal" class="modal-close">✕</button>
+            <h3 style="font-size:0.95rem; font-weight:700;">Profile</h3>
+            <div id="profileBody" style="margin-top:0.75rem;"></div>
+            <button id="deleteDataBtn" class="btn-action" style="width:100%; justify-content:center; margin-top:0.9rem; display:none; color:#fca5a5;">Delete my data</button>
+            <button id="closeProfileBtn" class="btn-action" style="width:100%; justify-content:center; margin-top:0.5rem;">Close</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
     <div id="infoModal" class="modal-backdrop">
         <div class="modal-box">
             <button id="closeInfoModal" class="modal-close">✕</button>
@@ -890,7 +974,8 @@
                 <div id="infoModalTags" class="tags-cloud"></div>
             </div>
 
-            <button id="closeInfoModalBtn" class="btn-action" style="width:100%; justify-content:center; margin-top:1rem;">Close</button>
+            <button id="infoShareBtn" class="btn-action" style="width:100%; justify-content:center; margin-top:1rem; display:none;">Share via Telegram</button>
+            <button id="closeInfoModalBtn" class="btn-action" style="width:100%; justify-content:center; margin-top:0.5rem;">Close</button>
         </div>
     </div>
 
@@ -1353,6 +1438,7 @@
                                     <div style="font-size:0.6rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.location)}</div>
                                 </div>
                             </div>
+                            ${shareEnabled() ? `<button class="share-btn" title="Share via Telegram" onclick="event.stopPropagation(); window.shareStationById(this.closest('.station-item').dataset.id)"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>` : ''}
                         </div>
                     `;
                 }
@@ -1389,9 +1475,11 @@
                     if (favoritesMap.has(activeStation.id)) {
                         favoritesMap.delete(activeStation.id);
                     } else {
+                        if (!canAddFavorite()) return;
                         favoritesMap.set(activeStation.id, activeStation);
                     }
                     saveFavoritesToStorage();
+                    scheduleSync();
                     updatePlayerUI();
                     updateFavCount();
                     // На вкладке избранного станция должна сразу исчезнуть из списка
@@ -1599,6 +1687,7 @@
                         tagsContainer.innerHTML = `<span style="font-size:0.7rem; color:var(--text-dim);">No tags</span>`;
                     }
 
+                    document.getElementById('infoShareBtn').style.display = shareEnabled() ? 'flex' : 'none';
                     toggleModal('infoModal');
                 });
 
@@ -1616,6 +1705,195 @@
                 document.getElementById('genreInfoBtn').addEventListener('click', () => toggleModal('genreInfoModal'));
                 document.getElementById('closeGenreInfoModal').addEventListener('click', () => toggleModal('genreInfoModal'));
                 document.getElementById('closeGenreInfoModalBtn').addEventListener('click', () => toggleModal('genreInfoModal'));
+
+
+                // ===== Telegram: профиль, синхронизация, «Поделиться» =====
+                const CFG = window.AURA_CONFIG || {};
+                const tg = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) ? window.Telegram.WebApp : null;
+                const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+                const syncEnabled = !!(tg && tgUser && CFG.WORKER_URL);
+                let syncState = syncEnabled ? 'idle' : 'off'; // off | idle | syncing | ok | error
+                let syncTimer = null;
+                let syncReady = false;
+
+                try { if (tg) { tg.ready(); tg.expand(); if (tg.disableVerticalSwipes) tg.disableVerticalSwipes(); } } catch (e) {}
+
+                function showToast(text) {
+                    const t = document.getElementById('toast');
+                    t.textContent = text;
+                    t.classList.add('show');
+                    clearTimeout(showToast._t);
+                    showToast._t = setTimeout(() => t.classList.remove('show'), 2200);
+                }
+
+                function canAddFavorite() {
+                    if (CFG.LIMITS_ENABLED && favoritesMap.size >= (CFG.FREE_FAVORITES_LIMIT || 5)) {
+                        showToast(`Free plan: up to ${CFG.FREE_FAVORITES_LIMIT || 5} favorites`);
+                        return false;
+                    }
+                    return true;
+                }
+
+                function apiFetch(path, opts) {
+                    opts = opts || {};
+                    return fetch(CFG.WORKER_URL.replace(/\/$/, '') + path, {
+                        method: opts.method || 'GET',
+                        headers: Object.assign({ 'Authorization': 'tma ' + tg.initData }, opts.body ? { 'Content-Type': 'application/json' } : {}),
+                        body: opts.body ? JSON.stringify(opts.body) : undefined,
+                        signal: AbortSignal.timeout(10000)
+                    });
+                }
+
+                function pushFavorites() {
+                    if (!syncEnabled || !syncReady) return Promise.resolve();
+                    syncState = 'syncing';
+                    return apiFetch('/api/favorites', { method: 'PUT', body: { items: Array.from(favoritesMap.values()) } })
+                        .then(r => { syncState = r.ok ? 'ok' : 'error'; })
+                        .catch(() => { syncState = 'error'; });
+                }
+
+                function scheduleSync() {
+                    if (!syncEnabled || !syncReady) return;
+                    clearTimeout(syncTimer);
+                    syncTimer = setTimeout(pushFavorites, 1200);
+                }
+
+                async function initialSync() {
+                    if (!syncEnabled) return;
+                    syncState = 'syncing';
+                    try {
+                        const r = await apiFetch('/api/favorites');
+                        if (!r.ok) throw new Error('http ' + r.status);
+                        const data = await r.json();
+                        let lastUid = null;
+                        try { lastUid = localStorage.getItem('aura_sync_uid'); } catch (e) {}
+                        const remote = Array.isArray(data.items) ? data.items : [];
+                        if (String(lastUid) === String(tgUser.id)) {
+                            // это устройство уже синхронизировано: сервер главный
+                            if (data.items) {
+                                favoritesMap = new Map(remote.map(x => [x.id, x]));
+                            }
+                        } else {
+                            // первый вход на этом устройстве: объединяем локальное и серверное
+                            remote.forEach(x => { if (!favoritesMap.has(x.id)) favoritesMap.set(x.id, x); });
+                        }
+                        try { localStorage.setItem('aura_sync_uid', String(tgUser.id)); } catch (e) {}
+                        saveFavoritesToStorage();
+                        syncReady = true;
+                        await pushFavorites();
+                        updateFavCount();
+                        if (activeTab === 'fav') renderStationsList();
+                        updatePlayerUI();
+                    } catch (e) {
+                        syncState = 'error';
+                    }
+                }
+
+                function renderProfileChip() {
+                    const chip = document.getElementById('profileBtn');
+                    const av = document.getElementById('profileAvatar');
+                    const nm = document.getElementById('profileName');
+                    if (tgUser) {
+                        const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || 'User';
+                        chip.classList.remove('guest');
+                        nm.textContent = name;
+                        av.style.display = 'flex';
+                        if (tgUser.photo_url && /^https:\/\//.test(tgUser.photo_url)) {
+                            av.innerHTML = '';
+                            const im = document.createElement('img');
+                            im.alt = ''; im.src = tgUser.photo_url;
+                            im.onerror = () => { av.textContent = name.charAt(0).toUpperCase(); };
+                            av.appendChild(im);
+                        } else {
+                            av.textContent = name.charAt(0).toUpperCase();
+                        }
+                    } else {
+                        chip.classList.add('guest');
+                        nm.textContent = 'Guest';
+                        av.style.display = 'none';
+                    }
+                }
+
+                const SYNC_LABEL = { off: 'Off', idle: 'Waiting', syncing: 'Syncing…', ok: 'Synced', error: 'Error, will retry' };
+                function renderProfileModal() {
+                    const body = document.getElementById('profileBody');
+                    const delBtn = document.getElementById('deleteDataBtn');
+                    if (tgUser) {
+                        const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'User';
+                        body.innerHTML = `
+                            <div class="profile-row"><span>Account</span><span>${escapeHtml(name)}${tgUser.username ? ' (@' + escapeHtml(tgUser.username) + ')' : ''}</span></div>
+                            <div class="profile-row"><span>Favorites sync</span><span>${CFG.WORKER_URL ? SYNC_LABEL[syncState] : 'Not configured'}</span></div>
+                            <div class="profile-row"><span>Favorites</span><span>${favoritesMap.size}</span></div>
+                            <div class="profile-row"><span>Plan</span><span>Free</span></div>`;
+                        delBtn.style.display = syncEnabled ? 'flex' : 'none';
+                    } else {
+                        body.innerHTML = `
+                            <p style="font-size:0.75rem; color:var(--text-muted); line-height:1.4;">You are using Aura without an account. Favorites are stored on this device only. Open Aura inside Telegram to sign in and sync them.</p>`;
+                        delBtn.style.display = 'none';
+                    }
+                }
+
+                document.getElementById('profileBtn').addEventListener('click', () => { renderProfileModal(); toggleModal('profileModal'); });
+                document.getElementById('closeProfileModal').addEventListener('click', () => toggleModal('profileModal'));
+                document.getElementById('closeProfileBtn').addEventListener('click', () => toggleModal('profileModal'));
+                document.getElementById('deleteDataBtn').addEventListener('click', async () => {
+                    if (!confirm('Delete your favorites from the server? Favorites on this device will stay.')) return;
+                    clearTimeout(syncTimer);
+                    syncReady = false;
+                    try {
+                        const r = await apiFetch('/api/me', { method: 'DELETE' });
+                        if (!r.ok) throw new Error();
+                        try { localStorage.removeItem('aura_sync_uid'); } catch (e) {}
+                        syncState = 'idle';
+                        showToast('Your server data was deleted');
+                    } catch (e) {
+                        showToast('Could not delete, try again');
+                        syncReady = true;
+                    }
+                    renderProfileModal();
+                });
+
+                // Поделиться через Telegram
+                function shareEnabled() { return !!CFG.BOT_USERNAME; }
+                function buildShareLink(id) {
+                    const base = 'https://t.me/' + CFG.BOT_USERNAME + (CFG.APP_SHORT_NAME ? '/' + CFG.APP_SHORT_NAME : '');
+                    return base + '?startapp=' + encodeURIComponent(id);
+                }
+                window.shareStationById = (id) => {
+                    const st = findStationById(id);
+                    if (!st || !shareEnabled()) return;
+                    const link = buildShareLink(st.id);
+                    const text = 'I recommend you to listen to the radio station ' + st.name;
+                    const shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text);
+                    if (tg && tg.openTelegramLink) { tg.openTelegramLink(shareUrl); return; }
+                    if (navigator.share) { navigator.share({ text, url: link }).catch(() => {}); return; }
+                    if (navigator.clipboard) { navigator.clipboard.writeText(text + '\n' + link).then(() => showToast('Link copied')).catch(() => window.open(shareUrl, '_blank')); return; }
+                    window.open(shareUrl, '_blank');
+                };
+                document.getElementById('infoShareBtn').addEventListener('click', () => { if (activeStation) window.shareStationById(activeStation.id); });
+
+                // Открытие станции по ссылке (без автозапуска)
+                async function openSharedStation() {
+                    const sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || new URLSearchParams(location.search).get('startapp');
+                    if (!sp || !/^[0-9a-fA-F-]{36}$/.test(sp)) return;
+                    try {
+                        const arr = await apiGet('/json/stations/byuuid/' + sp);
+                        if (Array.isArray(arr) && arr[0] && !activeStation) {
+                            activeStation = mapApiStation(arr[0]);
+                            updatePlayerUI();
+                            showToast('Press play to listen');
+                        }
+                    } catch (e) {}
+                }
+
+                // Клавиатура: при поиске скрываем нижнюю панель
+                const searchEl = document.getElementById('searchInput');
+                searchEl.addEventListener('focus', () => document.body.classList.add('kb-open'));
+                searchEl.addEventListener('blur', () => document.body.classList.remove('kb-open'));
+
+                renderProfileChip();
+                initialSync();
+                openSharedStation();
 
                 fetchGlobalStations();
                 updatePlayerUI();
